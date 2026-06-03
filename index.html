@@ -198,12 +198,120 @@ document.getElementById("note3").value||"",
 document.getElementById("note4").value||"",
 document.getElementById("note5").value||""]}
 
-function buildNaturalReason(card,note,vibe,rankingStyle){
-if(note && note.trim()){
-let cleaned=note.trim();
-return `I picked this because ${cleaned.toLowerCase()}, and it gives the card a really memorable place on the list.`;
+function tidyNote(note){
+return note.trim()
+.replace(/[.!?]+$/,"")
+.replace(/\s+/g," ");
 }
-return getRankingReason(rankingStyle,card,"");
+
+function noteToNaturalLine(card,note,rank,rankingStyle){
+let n=tidyNote(note);
+let lower=n.charAt(0).toLowerCase()+n.slice(1);
+
+let templatesByStyle={
+manual:[
+`${card} earns this spot for one simple reason: ${lower}.`,
+`For me, ${card} stands out because ${lower}.`,
+`${card} had to make the list. ${n}.`,
+`The reason I placed ${card} here is simple — ${lower}.`,
+`${card} might not be everyone's pick, but ${lower}.`
+],
+artwork:[
+`Visually, ${card} is hard to ignore — ${lower}.`,
+`The artwork on ${card} works so well because ${lower}.`,
+`${card} feels like a proper binder card. ${n}.`,
+`This is exactly the sort of art style I love: ${lower}.`,
+`${card} gets the spot because the artwork has that instant impact — ${lower}.`
+],
+underrated:[
+`${card} feels seriously overlooked, especially because ${lower}.`,
+`I do not see enough people talking about ${card}. ${n}.`,
+`${card} has sleeper energy written all over it — ${lower}.`,
+`This is one of those cards people might appreciate more later, because ${lower}.`,
+`${card} deserves more attention than it gets. ${n}.`
+],
+value:[
+`${card} is one I would keep an eye on, mainly because ${lower}.`,
+`I am not saying it is guaranteed, but ${card} has real potential because ${lower}.`,
+`${card} could age well if collectors catch on — ${lower}.`,
+`This is the type of card that can quietly build demand, especially because ${lower}.`,
+`${card} feels like a watchlist card to me. ${n}.`
+],
+cute:[
+`${card} gets this spot because it is just pure charm — ${lower}.`,
+`This one instantly made me smile. ${n}.`,
+`${card} has that wholesome Pokémon energy, especially because ${lower}.`,
+`Cute cards work best when they feel genuine, and ${card} does exactly that — ${lower}.`,
+`${card} is the kind of card casual fans connect with straight away. ${n}.`
+],
+iconic:[
+`${card} feels instantly recognisable, and ${lower}.`,
+`This is the kind of card people remember. ${n}.`,
+`${card} has that iconic feel because ${lower}.`,
+`Some cards just have presence, and ${card} is one of them — ${lower}.`,
+`${card} feels like it belongs in the conversation because ${lower}.`
+],
+story:[
+`${card} feels like a scene from a bigger story, especially because ${lower}.`,
+`This card makes you wonder what happened before and after. ${n}.`,
+`${card} does more than show a Pokémon — ${lower}.`,
+`The storytelling here is what sells it for me: ${lower}.`,
+`${card} feels like a tiny moment frozen in time. ${n}.`
+]
+};
+
+let templates=templatesByStyle[rankingStyle]||templatesByStyle.manual;
+return templates[(rank + n.length + card.length) % templates.length];
+}
+
+function getFallbackLine(card,rank,rankingStyle){
+let fallbackByStyle={
+manual:[
+`${card} stands out immediately and deserves a place in the Top 5.`,
+`${card} has enough personality to make the list.`,
+`${card} is one of those picks that just feels right here.`
+],
+artwork:[
+`${card} has a strong visual style that makes it pop on screen.`,
+`${card} looks great as a display piece, which is exactly what I want from this list.`,
+`${card} has the kind of artwork that makes you stop scrolling.`
+],
+underrated:[
+`${card} feels like a card people are not giving enough credit to.`,
+`${card} is a proper hidden gem in this lineup.`,
+`${card} deserves more attention than it currently gets.`
+],
+value:[
+`${card} has the kind of collector appeal that could build over time.`,
+`${card} is one I would personally keep on the watchlist.`,
+`${card} has sleeper potential if demand starts moving.`
+],
+cute:[
+`${card} brings pure feel-good energy to the list.`,
+`${card} is simple, charming, and really easy to love.`,
+`${card} has exactly the kind of cute appeal that works for Pokémon fans.`
+],
+iconic:[
+`${card} has the kind of presence that makes it memorable.`,
+`${card} feels like one people will recognise straight away.`,
+`${card} has that standout factor that makes it feel important.`
+],
+story:[
+`${card} feels like a small scene rather than just a card image.`,
+`${card} has personality, atmosphere, and a proper sense of moment.`,
+`${card} makes the artwork feel like it has a story behind it.`
+]
+};
+
+let list=fallbackByStyle[rankingStyle]||fallbackByStyle.manual;
+return list[rank % list.length];
+}
+
+function buildNaturalReason(card,note,vibe,rankingStyle,rank){
+if(note && note.trim()){
+return noteToNaturalLine(card,note,rank,rankingStyle);
+}
+return getFallbackLine(card,rank,rankingStyle);
 }
 
 function makeCardLine(rank,card,note,vibe){
@@ -377,22 +485,24 @@ return randomItem(reasons[rankingStyle]||reasons.manual);
 
 function generateTopFiveScript(title,cards,vibe){
 let notes=getCardNotes();
-let rankingStyle=document.getElementById("rankingStyle").value;
+let rankingStyle=document.getElementById("rankingStyle") ? document.getElementById("rankingStyle").value : "manual";
 let setName=document.getElementById("setName").value||"Pokémon cards";
 
-let intro=getRankingIntro(rankingStyle,setName);
+let intro=(typeof getRankingIntro==="function") ? getRankingIntro(rankingStyle,setName) : title;
 
 let parts=[
 intro,
-`At number five, ${cards[4]}. ${buildNaturalReason(cards[4],notes[4],vibe,rankingStyle)}`,
-`At number four, ${cards[3]}. ${buildNaturalReason(cards[3],notes[3],vibe,rankingStyle)}`,
-`At number three, ${cards[2]}. ${buildNaturalReason(cards[2],notes[2],vibe,rankingStyle)}`,
-`At number two, ${cards[1]}. ${buildNaturalReason(cards[1],notes[1],vibe,rankingStyle)}`,
-`And at number one, ${cards[0]}. ${randomItem(vibe.top)} ${buildNaturalReason(cards[0],notes[0],vibe,rankingStyle)}`,
+`At number five, ${cards[4]}. ${buildNaturalReason(cards[4],notes[4],vibe,rankingStyle,5)}`,
+`At number four, ${cards[3]}. ${buildNaturalReason(cards[3],notes[3],vibe,rankingStyle,4)}`,
+`At number three, ${cards[2]}. ${buildNaturalReason(cards[2],notes[2],vibe,rankingStyle,3)}`,
+`At number two, ${cards[1]}. ${buildNaturalReason(cards[1],notes[1],vibe,rankingStyle,2)}`,
+`And at number one, ${cards[0]}. ${randomItem(vibe.top)} ${buildNaturalReason(cards[0],notes[0],vibe,rankingStyle,1)}`,
 randomItem(vibe.endings)
 ];
 
-latestTikTokScript=parts.join("\n\n");
+latestTikTokScript=parts.join("
+
+");
 return latestTikTokScript;
 }
 
@@ -517,6 +627,16 @@ recorder.stop();
 }
 
 
+
+function captionFromNote(note,fallback){
+if(!note || !note.trim()) return fallback;
+let cleaned=note.trim().replace(/[.!?]+$/,"");
+let words=cleaned.split(/\s+/);
+if(words.length <= 5){
+return cleaned.toUpperCase();
+}
+return words.slice(0,6).join(" ").toUpperCase();
+}
 
 function generateCaptions(){
 let videoType=document.getElementById("videoType").value;
@@ -678,7 +798,7 @@ let plan=[
 "",
 "0:02 - 0:07",
 `Card #5: ${cards[4]}`,
-`Focus: ${notes[4] || getRankingReason(rankingStyle,cards[4],"")}`,
+`Focus: ${notes[4] || buildNaturalReason(cards[4],"",null,rankingStyle,5)}`,
 randomItem(focusLines),
 "",
 "0:07 - 0:08",
@@ -686,7 +806,7 @@ randomItem(focusLines),
 "",
 "0:08 - 0:13",
 `Card #4: ${cards[3]}`,
-`Focus: ${notes[3] || getRankingReason(rankingStyle,cards[3],"")}`,
+`Focus: ${notes[3] || buildNaturalReason(cards[3],"",null,rankingStyle,4)}`,
 randomItem(focusLines),
 "",
 "0:13 - 0:14",
@@ -694,7 +814,7 @@ randomItem(focusLines),
 "",
 "0:14 - 0:19",
 `Card #3: ${cards[2]}`,
-`Focus: ${notes[2] || getRankingReason(rankingStyle,cards[2],"")}`,
+`Focus: ${notes[2] || buildNaturalReason(cards[2],"",null,rankingStyle,3)}`,
 randomItem(focusLines),
 "",
 "0:19 - 0:20",
@@ -702,7 +822,7 @@ randomItem(focusLines),
 "",
 "0:20 - 0:25",
 `Card #2: ${cards[1]}`,
-`Focus: ${notes[1] || getRankingReason(rankingStyle,cards[1],"")}`,
+`Focus: ${notes[1] || buildNaturalReason(cards[1],"",null,rankingStyle,2)}`,
 randomItem(focusLines),
 "",
 "0:25 - 0:26",
@@ -710,7 +830,7 @@ randomItem(focusLines),
 "",
 "0:26 - 0:31",
 `Card #1: ${cards[0]}`,
-`Focus: ${notes[0] || getRankingReason(rankingStyle,cards[0],"")}`,
+`Focus: ${notes[0] || buildNaturalReason(cards[0],"",null,rankingStyle,1)}`,
 "Make this the strongest visual moment. Use the biggest zoom and clearest caption.",
 "",
 "0:31 - 0:33",
