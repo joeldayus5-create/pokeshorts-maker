@@ -139,6 +139,18 @@ button{
     color:#ccc;
     margin-top:10px;
 }
+
+.downloadLink{
+    display:block;
+    margin-top:15px;
+    padding:12px;
+    border-radius:8px;
+    background:white;
+    color:black;
+    text-align:center;
+    text-decoration:none;
+    font-weight:bold;
+}
 </style>
 </head>
 
@@ -237,6 +249,14 @@ button{
 <h2>Storyboard</h2>
 <div id="storyboardOutput">No storyboard generated yet.</div>
 <button onclick="copyStoryboard()">Copy Storyboard</button>
+</div>
+
+<div class="section">
+<h2>Download Video</h2>
+<p class="small">Exports the visual preview as a silent vertical WebM video. Upload this to TikTok, then add text layers and TikTok text-to-speech.</p>
+<button onclick="downloadWebMVideo()">Download Preview as WebM</button>
+<div id="downloadStatus" class="copyBox">No video exported yet.</div>
+<div id="downloadLinkArea"></div>
 </div>
 
 <div class="section">
@@ -461,6 +481,185 @@ function playVideoPreview(){
     },delay));
 }
 
+
+function drawRoundedRect(ctx,x,y,w,h,r){
+    if(w<2*r)r=w/2;
+    if(h<2*r)r=h/2;
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+    ctx.fill();
+}
+
+function drawWrappedText(ctx,text,x,y,maxWidth,lineHeight){
+    if(!text)return;
+
+    let words=text.split(" ");
+    let line="";
+    let lines=[];
+
+    for(let i=0;i<words.length;i++){
+        let testLine=line+words[i]+" ";
+        let width=ctx.measureText(testLine).width;
+
+        if(width>maxWidth && i>0){
+            lines.push(line.trim());
+            line=words[i]+" ";
+        }else{
+            line=testLine;
+        }
+    }
+
+    lines.push(line.trim());
+
+    let boxHeight=(lines.length*lineHeight)+40;
+    ctx.fillStyle="rgba(0,0,0,0.58)";
+    drawRoundedRect(ctx,60,y-40,maxWidth+40,boxHeight,22);
+
+    ctx.fillStyle="white";
+    ctx.textAlign="center";
+    ctx.textBaseline="top";
+
+    lines.forEach(function(l,index){
+        ctx.fillText(l,x,y+(index*lineHeight));
+    });
+}
+
+function loadImageForCanvas(src){
+    return new Promise(function(resolve){
+        if(!src){
+            resolve(null);
+            return;
+        }
+
+        let img=new Image();
+
+        img.onload=function(){
+            resolve(img);
+        };
+
+        img.onerror=function(){
+            resolve(null);
+        };
+
+        img.src=src;
+    });
+}
+
+function safeVideoFileName(){
+    let name=document.getElementById("setName").value.trim() || "pokeshorts-video";
+    return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g,"-")
+    .replace(/^-+|-+$/g,"") + ".webm";
+}
+
+async function downloadWebMVideo(){
+    let status=document.getElementById("downloadStatus");
+    let linkArea=document.getElementById("downloadLinkArea");
+
+    status.textContent="Preparing video. Keep this page open...";
+    linkArea.innerHTML="";
+
+    let scenes=buildScenes();
+
+    let canvas=document.createElement("canvas");
+    canvas.width=1080;
+    canvas.height=1920;
+
+    let ctx=canvas.getContext("2d");
+    let stream=canvas.captureStream(30);
+    let chunks=[];
+    let recorder;
+
+    try{
+        recorder=new MediaRecorder(stream,{mimeType:"video/webm;codecs=vp9"});
+    }catch(error){
+        try{
+            recorder=new MediaRecorder(stream,{mimeType:"video/webm;codecs=vp8"});
+        }catch(error2){
+            recorder=new MediaRecorder(stream,{mimeType:"video/webm"});
+        }
+    }
+
+    recorder.ondataavailable=function(event){
+        if(event.data && event.data.size>0){
+            chunks.push(event.data);
+        }
+    };
+
+    recorder.onstop=function(){
+        let blob=new Blob(chunks,{type:"video/webm"});
+        let url=URL.createObjectURL(blob);
+
+        let a=document.createElement("a");
+        a.href=url;
+        a.download=safeVideoFileName();
+        a.className="downloadLink";
+        a.textContent="Tap here to download WebM video";
+
+        linkArea.appendChild(a);
+        status.textContent="Video ready. Tap the download link.";
+    };
+
+    recorder.start();
+
+    for(let sceneIndex=0;sceneIndex<scenes.length;sceneIndex++){
+        let scene=scenes[sceneIndex];
+        let img=await loadImageForCanvas(scene.image);
+        let frames=Math.round((scene.duration/1000)*30);
+
+        for(let frame=0;frame<frames;frame++){
+            let progress=frame/frames;
+
+            ctx.fillStyle="#000";
+            ctx.fillRect(0,0,canvas.width,canvas.height);
+
+            let gradient=ctx.createLinearGradient(0,0,0,canvas.height);
+            gradient.addColorStop(0,"#151515");
+            gradient.addColorStop(1,"#000000");
+            ctx.fillStyle=gradient;
+            ctx.fillRect(0,0,canvas.width,canvas.height);
+
+            if(img){
+                let scale=1+(progress*0.12);
+                let ratio=Math.min((canvas.width*0.82)/img.width,(canvas.height*0.68)/img.height)*scale;
+                let w=img.width*ratio;
+                let h=img.height*ratio;
+
+                ctx.drawImage(
+                    img,
+                    (canvas.width-w)/2,
+                    (canvas.height-h)/2-80,
+                    w,
+                    h
+                );
+            }
+
+            if(scene.text){
+                ctx.font="bold 76px Arial";
+                drawWrappedText(ctx,scene.text.toUpperCase(),canvas.width/2,1490,900,88);
+            }
+
+            ctx.font="32px Arial";
+            ctx.fillStyle="rgba(255,255,255,0.75)";
+            ctx.textAlign="center";
+            ctx.textBaseline="top";
+            ctx.fillText(scene.time,canvas.width/2,60);
+
+            await new Promise(function(resolve){
+                setTimeout(resolve,1000/30);
+            });
+        }
+    }
+
+    recorder.stop();
+}
+
 function generateEverything(){
     generateScript();
     generateCaptions();
@@ -630,6 +829,8 @@ function clearAll(){
     document.getElementById("videoText").textContent="Your preview will appear here";
     document.getElementById("videoText").style.display="block";
     document.getElementById("videoTimer").textContent="Not playing";
+    document.getElementById("downloadStatus").textContent="No video exported yet.";
+    document.getElementById("downloadLinkArea").innerHTML="";
     document.getElementById("projectStatus").textContent="Cleared current working project. Saved projects were not deleted.";
 
     clearPreviewTimers();
