@@ -198,6 +198,20 @@ button{
 
 <button onclick="clearAll()">Clear Everything</button>
 
+<div class="section">
+<h2>Saved Projects</h2>
+<p class="small">Save your current video idea, then load it later for testing or posting.</p>
+<input id="projectName" placeholder="Project name - e.g. Pitch Black Top 5">
+<button onclick="saveProject()">Save Current Project</button>
+<select id="savedProjectsSelect">
+<option value="">No saved project selected</option>
+</select>
+<button onclick="loadProject()">Load Selected Project</button>
+<button onclick="deleteProject()">Delete Selected Project</button>
+<button onclick="refreshProjectList()">Refresh Project List</button>
+<div id="projectStatus" class="copyBox">No project action yet.</div>
+</div>
+
 <div class="imageBox">
 <strong>Image for Card #1</strong>
 <input type="file" accept="image/*" onchange="previewImage(event,'preview1',1)">
@@ -899,6 +913,146 @@ function copyIdeas(){
     copyText(latestIdeas,"Ideas copied!");
 }
 
+
+function getProjectData(){
+    return {
+        savedAt:new Date().toISOString(),
+        videoType:document.getElementById("videoType").value,
+        rankingStyle:document.getElementById("rankingStyle").value,
+        setName:document.getElementById("setName").value,
+        card1:document.getElementById("card1").value,
+        card2:document.getElementById("card2").value,
+        card3:document.getElementById("card3").value,
+        card4:document.getElementById("card4").value,
+        card5:document.getElementById("card5").value,
+        note1:document.getElementById("note1").value,
+        note2:document.getElementById("note2").value,
+        note3:document.getElementById("note3").value,
+        note4:document.getElementById("note4").value,
+        note5:document.getElementById("note5").value
+    };
+}
+
+function applyProjectData(data){
+    document.getElementById("videoType").value=data.videoType || "future";
+    document.getElementById("rankingStyle").value=data.rankingStyle || "manual";
+    document.getElementById("setName").value=data.setName || "";
+    document.getElementById("card1").value=data.card1 || "";
+    document.getElementById("card2").value=data.card2 || "";
+    document.getElementById("card3").value=data.card3 || "";
+    document.getElementById("card4").value=data.card4 || "";
+    document.getElementById("card5").value=data.card5 || "";
+    document.getElementById("note1").value=data.note1 || "";
+    document.getElementById("note2").value=data.note2 || "";
+    document.getElementById("note3").value=data.note3 || "";
+    document.getElementById("note4").value=data.note4 || "";
+    document.getElementById("note5").value=data.note5 || "";
+}
+
+function getSavedProjects(){
+    let raw=localStorage.getItem("pokeshortsProjects");
+    if(!raw){
+        return {};
+    }
+
+    try{
+        return JSON.parse(raw);
+    }catch(error){
+        return {};
+    }
+}
+
+function setSavedProjects(projects){
+    localStorage.setItem("pokeshortsProjects",JSON.stringify(projects));
+}
+
+function saveProject(){
+    let name=document.getElementById("projectName").value.trim();
+
+    if(!name){
+        let setName=document.getElementById("setName").value.trim();
+        name=setName || "Untitled Project";
+    }
+
+    let projects=getSavedProjects();
+    projects[name]=getProjectData();
+    setSavedProjects(projects);
+
+    document.getElementById("projectStatus").textContent="Saved project: " + name;
+    refreshProjectList();
+    document.getElementById("savedProjectsSelect").value=name;
+}
+
+function loadProject(){
+    let name=document.getElementById("savedProjectsSelect").value;
+
+    if(!name){
+        document.getElementById("projectStatus").textContent="Choose a saved project first.";
+        return;
+    }
+
+    let projects=getSavedProjects();
+    let data=projects[name];
+
+    if(!data){
+        document.getElementById("projectStatus").textContent="That project could not be found.";
+        refreshProjectList();
+        return;
+    }
+
+    applyProjectData(data);
+    document.getElementById("projectName").value=name;
+    document.getElementById("projectStatus").textContent="Loaded project: " + name;
+
+    generateEverything();
+}
+
+function deleteProject(){
+    let name=document.getElementById("savedProjectsSelect").value;
+
+    if(!name){
+        document.getElementById("projectStatus").textContent="Choose a saved project to delete.";
+        return;
+    }
+
+    let projects=getSavedProjects();
+    delete projects[name];
+    setSavedProjects(projects);
+
+    document.getElementById("projectStatus").textContent="Deleted project: " + name;
+    refreshProjectList();
+}
+
+function refreshProjectList(){
+    let projects=getSavedProjects();
+    let select=document.getElementById("savedProjectsSelect");
+
+    select.innerHTML="";
+
+    let empty=document.createElement("option");
+    empty.value="";
+    empty.textContent="Select a saved project";
+    select.appendChild(empty);
+
+    let names=Object.keys(projects).sort();
+
+    if(names.length===0){
+        empty.textContent="No saved projects yet";
+        return;
+    }
+
+    names.forEach(function(name){
+        let option=document.createElement("option");
+        option.value=name;
+        option.textContent=name;
+        select.appendChild(option);
+    });
+}
+
+window.addEventListener("load",function(){
+    refreshProjectList();
+});
+
 function clearAll(){
     let ids=["setName","card1","card2","card3","card4","card5","note1","note2","note3","note4","note5"];
     ids.forEach(function(id){
@@ -928,6 +1082,7 @@ function clearAll(){
     document.getElementById("videoText").textContent="Your preview will appear here";
     document.getElementById("videoText").style.display="block";
     document.getElementById("videoTimer").textContent="Not playing";
+    document.getElementById("projectStatus").textContent="Cleared current working project. Saved projects were not deleted.";
     clearPreviewTimers();
 }
 </script>
