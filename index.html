@@ -445,6 +445,26 @@ function pickUniqueTemplate(list){
     return chosen.text;
 }
 
+function polishNote(note){
+    let n=tidyNote(note);
+    if(!n)return "";
+    return n.charAt(0).toUpperCase()+n.slice(1);
+}
+
+function pickUniqueTemplate(list){
+    let available=list.filter(function(item){
+        return !usedScriptTemplates.includes(item.id);
+    });
+
+    if(available.length===0){
+        available=list;
+    }
+
+    let chosen=randomItem(available);
+    usedScriptTemplates.push(chosen.id);
+    return chosen.text;
+}
+
 function getReasonFromNote(card,note,rank){
     let rankingStyle=document.getElementById("rankingStyle").value;
 
@@ -452,69 +472,96 @@ function getReasonFromNote(card,note,rank){
         return getFallbackReason(card,rank);
     }
 
-    let n=tidyNote(note);
-    let lower=n.charAt(0).toLowerCase()+n.slice(1);
+    let idea=polishNote(note);
+    let lower=idea.charAt(0).toLowerCase()+idea.slice(1);
 
     let universal=[
-        {id:"u1",text:`The first thing that stands out is ${lower}.`},
-        {id:"u2",text:`What makes this one work for me is ${lower}.`},
-        {id:"u3",text:`I keep coming back to this card because ${lower}.`},
-        {id:"u4",text:`This one deserves a spot because ${lower}.`},
-        {id:"u5",text:`There is just something about it — ${lower}.`},
-        {id:"u6",text:`This feels like the kind of card people notice straight away because ${lower}.`},
-        {id:"u7",text:`The more I look at it, the more I appreciate it, especially because ${lower}.`},
-        {id:"u8",text:`This is exactly the type of card that works well in a Top 5, because ${lower}.`}
+        {id:"u1",text:`The main reason this makes the list is simple: ${lower}.`},
+        {id:"u2",text:`For me, the appeal here is clear. ${idea}.`},
+        {id:"u3",text:`This one works because of one thing: ${lower}.`},
+        {id:"u4",text:`This is not just here to fill the list. ${idea}.`},
+        {id:"u5",text:`The more I look at this one, the more ${lower} stands out.`},
+        {id:"u6",text:`I can see collectors connecting with this one because of ${lower}.`},
+        {id:"u7",text:`It has that instant scroll-stopping quality, mainly because of ${lower}.`},
+        {id:"u8",text:`This is the kind of card that becomes easier to appreciate once you notice ${lower}.`},
+        {id:"u9",text:`I think this pick makes sense because it brings ${lower} to the list.`},
+        {id:"u10",text:`There is a clear reason this caught my eye: ${lower}.`}
     ];
 
     let styleTemplates={
         manual:[
-            {id:"m1",text:`${card} earns this spot because ${lower}.`},
-            {id:"m2",text:`For me, ${card} stands out because ${lower}.`},
-            {id:"m3",text:`I had to include ${card}. ${n}.`},
-            {id:"m4",text:`The reason ${card} made the list is simple: ${lower}.`},
-            {id:"m5",text:`${card} might not be everyone's pick, but ${lower}.`}
+            {id:"m1",text:`${card} earns this spot for me. ${idea}.`},
+            {id:"m2",text:`This is one of those cards that just makes sense here. ${idea}.`},
+            {id:"m3",text:`I had to include ${card}, mostly because of ${lower}.`},
+            {id:"m4",text:`The reason ${card} made the list is the overall feel: ${lower}.`},
+            {id:"m5",text:`${card} might not be everyone's pick, but the appeal is definitely there. ${idea}.`},
+            {id:"m6",text:`This pick comes down to ${lower}. That is enough to get it into the Top 5.`},
+            {id:"m7",text:`I think ${card} brings something different to the list, especially with ${lower}.`},
+            {id:"m8",text:`This one has a really clear identity. ${idea}.`}
         ],
         artwork:[
-            {id:"a1",text:`The artwork on ${card} does a lot of heavy lifting here. ${n}.`},
-            {id:"a2",text:`Visually, ${card} is hard to ignore because ${lower}.`},
-            {id:"a3",text:`This is the kind of artwork that makes a card feel special, especially because ${lower}.`},
-            {id:"a4",text:`As a binder card, ${card} absolutely works. ${n}.`},
-            {id:"a5",text:`The colours, pose, and overall feel stand out because ${lower}.`}
+            {id:"a1",text:`The artwork on ${card} does a lot of heavy lifting here. ${idea}.`},
+            {id:"a2",text:`Visually, this is hard to ignore. ${idea}.`},
+            {id:"a3",text:`This is the kind of artwork that makes a card feel special. ${idea}.`},
+            {id:"a4",text:`As a binder card, ${card} absolutely works. ${idea}.`},
+            {id:"a5",text:`The visual impact is what sells it for me. ${idea}.`},
+            {id:"a6",text:`This card has the type of artwork that makes you stop and look twice. ${idea}.`},
+            {id:"a7",text:`The composition works really well here, especially with ${lower}.`},
+            {id:"a8",text:`This feels more like a display piece than just another card. ${idea}.`},
+            {id:"a9",text:`The art style gives this card a proper identity. ${idea}.`},
+            {id:"a10",text:`I like cards that tell you something immediately, and this one does that through ${lower}.`}
         ],
         underrated:[
-            {id:"un1",text:`I do not see enough people talking about ${card}. ${n}.`},
-            {id:"un2",text:`This feels like a proper sleeper pick because ${lower}.`},
-            {id:"un3",text:`${card} is easy to overlook, but that is exactly why I like it. ${n}.`},
-            {id:"un4",text:`This could age better than people expect because ${lower}.`},
-            {id:"un5",text:`For an underrated pick, ${card} makes a lot of sense because ${lower}.`}
+            {id:"un1",text:`I do not see enough people talking about ${card}. ${idea}.`},
+            {id:"un2",text:`This feels like a proper sleeper pick. ${idea}.`},
+            {id:"un3",text:`${card} is easy to overlook, but that is exactly why I like it. ${idea}.`},
+            {id:"un4",text:`This could age better than people expect. ${idea}.`},
+            {id:"un5",text:`For an underrated pick, ${card} makes a lot of sense. ${idea}.`},
+            {id:"un6",text:`This is one of those cards people might appreciate more later. ${idea}.`},
+            {id:"un7",text:`The more attention this gets, the more people will notice ${lower}.`},
+            {id:"un8",text:`This has hidden gem energy written all over it. ${idea}.`},
+            {id:"un9",text:`It is not the loudest card, but ${lower} gives it a real reason to be here.`},
+            {id:"un10",text:`This deserves more attention, especially when you look at ${lower}.`}
         ],
         value:[
-            {id:"v1",text:`I would keep an eye on ${card}, mainly because ${lower}.`},
-            {id:"v2",text:`I am not saying it is guaranteed, but ${card} has potential because ${lower}.`},
-            {id:"v3",text:`This feels like the sort of card that could quietly build demand. ${n}.`},
-            {id:"v4",text:`If collectors catch on, ${card} could become interesting because ${lower}.`},
-            {id:"v5",text:`For me, ${card} belongs on the watchlist because ${lower}.`}
+            {id:"v1",text:`I would keep an eye on ${card}, mainly because of ${lower}.`},
+            {id:"v2",text:`I am not saying it is guaranteed, but ${card} has potential. ${idea}.`},
+            {id:"v3",text:`This feels like the sort of card that could quietly build demand. ${idea}.`},
+            {id:"v4",text:`If collectors catch on, ${card} could become interesting. ${idea}.`},
+            {id:"v5",text:`For me, ${card} belongs on the watchlist because of ${lower}.`},
+            {id:"v6",text:`This has the ingredients collectors usually notice over time. ${idea}.`},
+            {id:"v7",text:`This is not a guarantee, but it has the kind of appeal that can build slowly. ${idea}.`},
+            {id:"v8",text:`Cards like this can sit quietly for a while, then suddenly people notice them. ${idea}.`}
         ],
         cute:[
-            {id:"c1",text:`${card} has that instant charm factor because ${lower}.`},
-            {id:"c2",text:`This one just makes me smile. ${n}.`},
-            {id:"c3",text:`For a cute card, ${card} absolutely nails it because ${lower}.`},
-            {id:"c4",text:`This has the wholesome Pokémon energy people love. ${n}.`},
-            {id:"c5",text:`Casual fans would understand this pick straight away because ${lower}.`}
+            {id:"c1",text:`${card} has that instant charm factor. ${idea}.`},
+            {id:"c2",text:`This one just makes me smile. ${idea}.`},
+            {id:"c3",text:`For a cute card, ${card} absolutely nails it. ${idea}.`},
+            {id:"c4",text:`This has the wholesome Pokémon energy people love. ${idea}.`},
+            {id:"c5",text:`Casual fans would understand this pick straight away. ${idea}.`},
+            {id:"c6",text:`Sometimes simple charm is enough, and this card has exactly that. ${idea}.`},
+            {id:"c7",text:`This is the kind of card that feels warm, fun, and easy to love. ${idea}.`},
+            {id:"c8",text:`The cuteness factor here is doing a lot of work. ${idea}.`}
         ],
         iconic:[
-            {id:"i1",text:`${card} feels instantly recognisable because ${lower}.`},
-            {id:"i2",text:`This has the kind of presence that makes a card memorable. ${n}.`},
-            {id:"i3",text:`Some cards just feel important, and ${card} has that because ${lower}.`},
-            {id:"i4",text:`This is the kind of card people remember after seeing it once. ${n}.`},
-            {id:"i5",text:`${card} belongs in the conversation because ${lower}.`}
+            {id:"i1",text:`${card} feels instantly recognisable. ${idea}.`},
+            {id:"i2",text:`This has the kind of presence that makes a card memorable. ${idea}.`},
+            {id:"i3",text:`Some cards just feel important, and ${card} has that quality. ${idea}.`},
+            {id:"i4",text:`This is the kind of card people remember after seeing it once. ${idea}.`},
+            {id:"i5",text:`${card} belongs in the conversation because of ${lower}.`},
+            {id:"i6",text:`There is a reason this one feels like a standout. ${idea}.`},
+            {id:"i7",text:`This card has the kind of character appeal that makes it hard to ignore. ${idea}.`},
+            {id:"i8",text:`If you are building a memorable Top 5, this card has to be considered. ${idea}.`}
         ],
         story:[
-            {id:"s1",text:`${card} feels like a moment from a bigger story because ${lower}.`},
-            {id:"s2",text:`This card makes you wonder what happened before and after. ${n}.`},
-            {id:"s3",text:`The storytelling here is what sells it for me: ${lower}.`},
-            {id:"s4",text:`This feels less like a still image and more like a scene. ${n}.`},
-            {id:"s5",text:`${card} has atmosphere, personality, and a real sense of moment because ${lower}.`}
+            {id:"s1",text:`${card} feels like a moment from a bigger story. ${idea}.`},
+            {id:"s2",text:`This card makes you wonder what happened before and after. ${idea}.`},
+            {id:"s3",text:`The storytelling here is what sells it for me. ${idea}.`},
+            {id:"s4",text:`This feels less like a still image and more like a scene. ${idea}.`},
+            {id:"s5",text:`${card} has atmosphere, personality, and a real sense of moment. ${idea}.`},
+            {id:"s6",text:`This is the type of artwork that gives the card a little world of its own. ${idea}.`},
+            {id:"s7",text:`It feels like there is something happening beyond the frame. ${idea}.`},
+            {id:"s8",text:`This is what I love about visual storytelling in Pokémon cards. ${idea}.`}
         ]
     };
 
@@ -945,95 +992,95 @@ function getSuggestedNoteForCard(card,rank){
 
     let suggestions={
         future:[
-            "strong chase potential with collector appeal",
-            "the kind of card that could get more attention after release",
-            "stands out as a card people may regret ignoring",
-            "has enough hype potential to be worth watching",
-            "could become one of the cards people remember from the set"
+            "strong chase potential and collector appeal",
+            "early hype that could build after release",
+            "the kind of card people may regret ignoring",
+            "clear watchlist energy",
+            "the potential to become one of the remembered cards from the set"
         ],
         artworks:[
-            "beautiful artwork with a memorable overall scene",
-            "the colours and composition make it stand out instantly",
-            "looks like a proper binder card",
-            "the artwork has a strong display-piece feel",
-            "one of those cards that gets better the longer you look at it"
+            "beautiful artwork with a memorable scene",
+            "a strong colour palette and composition",
+            "proper binder-card energy",
+            "a display-piece feel",
+            "artwork that gets better the longer you look at it"
         ],
         cute:[
             "pure wholesome energy",
-            "instantly makes the card feel charming",
-            "the kind of cute card casual fans would love",
-            "simple, happy, and easy to connect with",
-            "has that feel-good Pokémon card appeal"
+            "instant charm",
+            "cute artwork casual fans would love",
+            "simple feel-good Pokémon appeal",
+            "warm and happy artwork"
         ],
         connected:[
-            "works better as part of a bigger visual scene",
-            "the connection in the artwork makes it more interesting",
-            "feels like one piece of a larger story",
-            "rewards collectors who notice the hidden link",
-            "makes the card feel more special when paired with the others"
+            "a clear bigger-picture feeling",
+            "linked artwork that makes the card more interesting",
+            "the feeling of being one piece of a larger story",
+            "hidden connection appeal",
+            "a more special feel when paired with other cards"
         ],
         underrated:[
-            "feels overlooked compared with how good it is",
-            "does not get talked about enough",
-            "has hidden gem energy",
-            "could age better than people expect",
-            "deserves more attention from collectors"
+            "hidden gem energy",
+            "more quality than people give it credit for",
+            "underrated artwork",
+            "sleeper appeal",
+            "the feeling that collectors are overlooking it"
         ],
         regret:[
-            "feels like the kind of card I should have picked up sooner",
-            "used to be easier to ignore but now stands out more",
-            "looks like an obvious pick in hindsight",
-            "has the kind of appeal I underestimated",
-            "one I would not want to miss twice"
+            "the kind of card that looks obvious in hindsight",
+            "appeal that was easy to underestimate",
+            "a card I would not want to miss twice",
+            "the feeling that I should have picked it up sooner",
+            "quiet collector appeal"
         ],
         explode:[
-            "has sleeper potential if collectors catch on",
-            "could move quickly if demand builds",
-            "has the right mix of artwork and character appeal",
-            "feels like a watchlist card",
-            "could become more popular once people start talking about it"
+            "sleeper potential",
+            "the right mix of artwork and character appeal",
+            "watchlist energy",
+            "the potential to move fast if demand builds",
+            "collector appeal that could grow over time"
         ],
         bestset:[
-            "captures what makes the set memorable",
-            "feels like the standout card from its release",
-            "represents the set really well",
-            "has the strongest identity from that set",
-            "is the card I associate most with that release"
+            "a strong set-defining identity",
+            "the feeling of being the standout card from the release",
+            "the card that represents the set best",
+            "memorable set appeal",
+            "the strongest identity from that set"
         ],
         darkest:[
-            "has a genuinely unsettling atmosphere",
-            "feels darker than people expect from Pokémon",
-            "the mood of the artwork is seriously creepy",
-            "has a horror-style feel without trying too hard",
-            "the longer you look at it, the stranger it feels"
+            "a genuinely unsettling atmosphere",
+            "dark artwork that feels different from normal Pokémon cards",
+            "a creepy mood that makes it memorable",
+            "horror-style energy",
+            "the kind of artwork that gets stranger the longer you look"
         ],
         happiest:[
-            "full of warm, cheerful energy",
-            "feels wholesome and joyful",
-            "has the kind of artwork that makes collecting feel fun",
-            "simple but genuinely uplifting",
-            "pure good-vibes Pokémon artwork"
+            "warm cheerful energy",
+            "wholesome joy",
+            "the kind of artwork that makes collecting feel fun",
+            "simple uplifting charm",
+            "pure good-vibes Pokémon energy"
         ],
         saddest:[
-            "has an emotional feeling that hits harder than expected",
-            "feels like a quiet sad moment",
-            "the artwork tells a surprisingly emotional story",
-            "has a lonely feeling that makes it memorable",
-            "feels deeper than a normal card image"
+            "a surprisingly emotional feeling",
+            "a quiet sad atmosphere",
+            "artwork that tells an emotional story",
+            "a lonely feeling that makes it memorable",
+            "a deeper feeling than a normal card image"
         ],
         stories:[
-            "feels like one moment from a bigger story",
-            "makes you wonder what happened before and after",
-            "has strong visual storytelling",
-            "feels like a full scene in one card",
-            "does more than show a Pokémon; it creates a moment"
+            "the feeling of one moment from a bigger story",
+            "strong before-and-after storytelling",
+            "visual storytelling",
+            "a full scene in one card",
+            "a card that creates a moment rather than just showing a Pokémon"
         ],
         facts:[
-            "has an interesting detail collectors may not know",
-            "becomes more interesting once you know the background",
-            "has a detail that makes the card worth talking about",
-            "is the kind of card fact people remember",
-            "has more history behind it than people realise"
+            "an interesting detail collectors may not know",
+            "background information that makes the card more interesting",
+            "a detail worth talking about",
+            "a memorable card fact",
+            "more history than people realise"
         ]
     };
 
@@ -1041,32 +1088,33 @@ function getSuggestedNoteForCard(card,rank){
         dark:"dark atmosphere and strong visual impact",
         cute:"wholesome charm and instant fan appeal",
         iconic:"huge character appeal and recognisable design",
-        premium:"premium feel that collectors naturally notice",
+        premium:"premium collector appeal",
         artwork:"strong illustration quality and display value",
         mega:"big Mega Evolution appeal and eye-catching design",
         general:"strong artwork and clear collector appeal"
     };
 
-    let pool=suggestions[videoType] || suggestions.artworks;
     let styleExtra={
-        artwork:"the artwork is the main reason it stands out",
-        underrated:"people may be sleeping on how good this card actually is",
-        value:"this feels like a card worth watching over time",
-        cute:"the charm factor is doing a lot of the work here",
-        iconic:"it has the kind of presence people remember",
-        story:"the card feels like it is telling a small story",
-        manual:"it has enough personality to justify its place"
+        artwork:"artwork that feels strong enough to carry the card",
+        underrated:"the feeling that people are sleeping on it",
+        value:"long-term watchlist potential",
+        cute:"a really clear charm factor",
+        iconic:"a memorable presence",
+        story:"a strong storytelling feel",
+        manual:"a clear reason to stand out"
     };
 
+    let pool=suggestions[videoType] || suggestions.artworks;
+
     if(rank===1){
-        return keywordSuggestions[key] + ", and " + (styleExtra[rankingStyle] || randomItem(pool));
+        return keywordSuggestions[key] + " with " + (styleExtra[rankingStyle] || randomItem(pool));
     }
 
     if(rank===2 || rank===3){
         return randomItem(pool);
     }
 
-    return randomItem(pool) + ", with " + keywordSuggestions[key];
+    return randomItem(pool) + " and " + keywordSuggestions[key];
 }
 
 function suggestNotes(){
