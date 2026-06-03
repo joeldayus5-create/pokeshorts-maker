@@ -179,6 +179,14 @@ button{
 <option value="story">Ranking Style: Best Storytelling</option>
 </select>
 
+<select id="scriptMode">
+<option value="auto">Script Mode: Auto Generate</option>
+<option value="manual">Script Mode: Use My Manual Script</option>
+</select>
+
+<textarea id="manualScript" placeholder="Optional manual script. If you choose Manual Script Mode, this exact text will be used for the TikTok voiceover."></textarea>
+<button onclick="fillManualScriptTemplate()">Fill Manual Script Template</button>
+
 <input id="setName" placeholder="Set name / theme">
 
 <input id="card1" placeholder="Card #1">
@@ -242,19 +250,10 @@ button{
 <img id="preview5" class="preview">
 </div>
 
-<button onclick="suggestNotes()">Suggest Notes</button>
 <button onclick="generateEverything()">Generate Full TikTok Package</button>
 <button onclick="generateScript()">Generate Script Only</button>
 <button onclick="playVideoPreview()">Generate Video Preview</button>
 <button onclick="generateVideoIdeas()">Generate 30 Video Ideas</button>
-
-<div class="section">
-<h2>Smart Note Suggestions</h2>
-<p class="small">Clean, short note ideas you can edit before generating the script.</p>
-<div id="noteSuggestionsOutput" class="copyBox">No note suggestions generated yet.</div>
-<button onclick="applySuggestedNotes()">Apply Suggested Notes</button>
-<button onclick="copySuggestedNotes()">Copy Suggested Notes</button>
-</div>
 
 <div class="section">
 <h2>Script</h2>
@@ -316,8 +315,6 @@ let latestHashtags="";
 let latestStoryboard="";
 let latestDirectorPlan="";
 let latestIdeas="";
-let latestSuggestedNotes=[];
-let latestSuggestedNotesText="";
 let previewTimeouts=[];
 
 function randomItem(list){
@@ -430,134 +427,113 @@ function tidyNote(note){
     return note.replace(/[.!?]+$/,"").replace(/\s+/g," ").trim();
 }
 
-
-function cleanNoteForSpeech(note){
-    let n=tidyNote(note);
-    if(!n)return "";
-    return n.charAt(0).toUpperCase()+n.slice(1);
-}
-
 function getReasonFromNote(card,note,rank){
     if(!note){
         return getFallbackReason(card,rank);
     }
 
-    let idea=cleanNoteForSpeech(note);
-    let lower=idea.charAt(0).toLowerCase()+idea.slice(1);
-    let style=document.getElementById("rankingStyle").value;
+    let n=tidyNote(note);
+    let lower=n.charAt(0).toLowerCase()+n.slice(1);
+    let rankingStyle=document.getElementById("rankingStyle").value;
 
     let templates={
         manual:[
-            `For me, the big thing here is ${lower}.`,
-            `This earns the spot because of ${lower}.`,
-            `The reason this made the list is ${lower}.`,
-            `This one stands out mainly because of ${lower}.`,
-            `I think this belongs here because of ${lower}.`
+            `${card} earns this spot because ${lower}.`,
+            `For me, ${card} stands out because ${lower}.`,
+            `${card} had to make the list. ${n}.`,
+            `The reason I placed ${card} here is simple: ${lower}.`,
+            `${card} might not be everyone's pick, but ${lower}.`
         ],
         artwork:[
-            `The artwork is the selling point here, especially ${lower}.`,
-            `Visually, this one works because of ${lower}.`,
-            `This feels like a proper binder card thanks to ${lower}.`,
-            `The main thing I notice is ${lower}.`,
-            `As artwork, this stands out because of ${lower}.`
+            `Visually, ${card} is hard to ignore because ${lower}.`,
+            `The artwork on ${card} works so well because ${lower}.`,
+            `${card} feels like a proper binder card. ${n}.`,
+            `This is exactly the sort of art style I love: ${lower}.`,
+            `${card} gets the spot because the artwork has instant impact: ${lower}.`
         ],
         underrated:[
-            `This feels overlooked because people are missing ${lower}.`,
-            `I think collectors are sleeping on this, especially with ${lower}.`,
-            `This deserves more attention because of ${lower}.`,
-            `The hidden gem factor here is ${lower}.`,
-            `This is stronger than people give it credit for, mainly because of ${lower}.`
+            `${card} feels seriously overlooked, especially because ${lower}.`,
+            `I do not see enough people talking about ${card}. ${n}.`,
+            `${card} has sleeper energy written all over it because ${lower}.`,
+            `This is one people might appreciate more later, because ${lower}.`,
+            `${card} deserves more attention than it gets. ${n}.`
         ],
         value:[
-            `This is worth watching because of ${lower}.`,
-            `The long-term appeal here is ${lower}.`,
-            `I would keep an eye on this because of ${lower}.`,
-            `This could age well if collectors notice ${lower}.`,
-            `The watchlist factor for me is ${lower}.`
+            `${card} is one I would keep an eye on, mainly because ${lower}.`,
+            `I am not saying it is guaranteed, but ${card} has potential because ${lower}.`,
+            `${card} could age well if collectors catch on because ${lower}.`,
+            `This is the type of card that can quietly build demand, especially because ${lower}.`,
+            `${card} feels like a watchlist card to me. ${n}.`
         ],
         cute:[
-            `The charm here comes from ${lower}.`,
-            `This one works because it has ${lower}.`,
-            `The cute factor is obvious, especially with ${lower}.`,
-            `This has that feel-good Pokémon energy because of ${lower}.`,
-            `This is easy to love because of ${lower}.`
+            `${card} gets this spot because it has pure charm: ${lower}.`,
+            `This one instantly made me smile. ${n}.`,
+            `${card} has that wholesome Pokémon energy, especially because ${lower}.`,
+            `Cute cards work best when they feel genuine, and ${card} does exactly that because ${lower}.`,
+            `${card} is the kind of card casual fans connect with straight away. ${n}.`
         ],
         iconic:[
-            `This feels memorable because of ${lower}.`,
-            `The standout factor here is ${lower}.`,
-            `This has real presence thanks to ${lower}.`,
-            `This is the kind of card people remember because of ${lower}.`,
-            `The iconic feel comes from ${lower}.`
+            `${card} feels instantly recognisable because ${lower}.`,
+            `This is the kind of card people remember. ${n}.`,
+            `${card} has that iconic feel because ${lower}.`,
+            `Some cards just have presence, and ${card} is one of them because ${lower}.`,
+            `${card} belongs in the conversation because ${lower}.`
         ],
         story:[
-            `The storytelling works because of ${lower}.`,
-            `This feels like a full scene thanks to ${lower}.`,
-            `This card creates a moment because of ${lower}.`,
-            `The atmosphere here comes from ${lower}.`,
-            `This feels deeper than a normal card image because of ${lower}.`
+            `${card} feels like a scene from a bigger story because ${lower}.`,
+            `This card makes you wonder what happened before and after. ${n}.`,
+            `${card} does more than show a Pokémon because ${lower}.`,
+            `The storytelling here is what sells it for me: ${lower}.`,
+            `${card} feels like a tiny moment frozen in time. ${n}.`
         ]
     };
 
-    let list=templates[style] || templates.manual;
-    return list[(rank + idea.length) % list.length];
+    let list=templates[rankingStyle] || templates.manual;
+    return list[(rank + n.length + card.length) % list.length];
 }
 
 function getFallbackReason(card,rank){
-    let style=document.getElementById("rankingStyle").value;
+    let rankingStyle=document.getElementById("rankingStyle").value;
 
     let fallbacks={
         manual:[
-            `This has enough visual appeal to justify a place in the Top 5.`,
-            `This brings something different to the list.`,
-            `This is a strong pick with clear collector appeal.`,
-            `This stands out enough to deserve the spot.`,
-            `This feels like one people will notice.`
+            `${card} stands out immediately and deserves a place in the Top 5.`,
+            `${card} has enough personality to make the list.`,
+            `${card} is one of those picks that just feels right here.`
         ],
         artwork:[
-            `The artwork gives this card instant impact.`,
-            `This has strong display value.`,
-            `This is the kind of artwork that makes people stop scrolling.`,
-            `The overall scene gives this card a real identity.`,
-            `This works really well as a binder card.`
+            `${card} has a strong visual style that makes it pop on screen.`,
+            `${card} looks great as a display piece, which is exactly what I want from this list.`,
+            `${card} has the kind of artwork that makes you stop scrolling.`
         ],
         underrated:[
-            `This feels like a hidden gem.`,
-            `This deserves more attention than it gets.`,
-            `This is stronger than people give it credit for.`,
-            `This could easily be overlooked, but it should not be.`,
-            `This has sleeper appeal.`
+            `${card} feels like a card people are not giving enough credit to.`,
+            `${card} is a proper hidden gem in this lineup.`,
+            `${card} deserves more attention than it currently gets.`
         ],
         value:[
-            `This has watchlist potential.`,
-            `This could build interest over time.`,
-            `This has the kind of appeal collectors notice later.`,
-            `This feels like a card worth keeping an eye on.`,
-            `This could age better than expected.`
+            `${card} has the kind of collector appeal that could build over time.`,
+            `${card} is one I would personally keep on the watchlist.`,
+            `${card} has sleeper potential if demand starts moving.`
         ],
         cute:[
-            `This has pure feel-good energy.`,
-            `This is simple, charming, and easy to love.`,
-            `This has instant cute appeal.`,
-            `This is the kind of card that makes people smile.`,
-            `This has wholesome Pokémon energy.`
+            `${card} brings pure feel-good energy to the list.`,
+            `${card} is simple, charming, and really easy to love.`,
+            `${card} has exactly the kind of cute appeal that works for Pokémon fans.`
         ],
         iconic:[
-            `This has memorable character appeal.`,
-            `This feels instantly recognisable.`,
-            `This has real presence on the list.`,
-            `This is the kind of card people remember.`,
-            `This has that standout factor.`
+            `${card} has the kind of presence that makes it memorable.`,
+            `${card} feels like one people will recognise straight away.`,
+            `${card} has that standout factor that makes it feel important.`
         ],
         story:[
-            `This feels like a small scene rather than just a card image.`,
-            `This has a real sense of moment.`,
-            `This artwork feels like it has a story behind it.`,
-            `This creates atmosphere straight away.`,
-            `This feels like more than just a pose.`
+            `${card} feels like a small scene rather than just a card image.`,
+            `${card} has personality, atmosphere, and a proper sense of moment.`,
+            `${card} makes the artwork feel like it has a story behind it.`
         ]
     };
 
-    let list=fallbacks[style] || fallbacks.manual;
+    let list=fallbacks[rankingStyle] || fallbacks.manual;
     return list[rank % list.length];
 }
 
@@ -606,7 +582,41 @@ function getEnding(){
     return randomItem(endings[videoType] || endings.future);
 }
 
+
+function fillManualScriptTemplate(){
+    let cards=getCards();
+    let setName=document.getElementById("setName").value.trim() || "these cards";
+
+    let template=
+`Here are my Top 5 picks for ${setName}.
+
+At number five, ${cards[4]}. [Say exactly why you picked this card.]
+
+At number four, ${cards[3]}. [Say exactly why this one stands out.]
+
+At number three, ${cards[2]}. [Add your honest opinion here.]
+
+At number two, ${cards[1]}. [Explain why this almost made number one.]
+
+And at number one, ${cards[0]}. [Explain why this is your favourite pick.]
+
+Which card would you put at number one?`;
+
+    document.getElementById("manualScript").value=template;
+    document.getElementById("scriptMode").value="manual";
+}
+
 function generateScript(){
+    let mode=document.getElementById("scriptMode").value;
+    let manual=document.getElementById("manualScript").value.trim();
+
+    if(mode==="manual" && manual){
+        latestScript=manual;
+        latestTikTokScript=manual;
+        document.getElementById("scriptOutput").textContent=latestScript;
+        return;
+    }
+
     let cards=getCards();
     let notes=getNotes();
 
@@ -892,212 +902,6 @@ function generateVideoIdeas(){
     document.getElementById("ideasOutput").innerHTML=html;
 }
 
-
-function getThemeNotePool(){
-    let videoType=document.getElementById("videoType").value;
-    let style=document.getElementById("rankingStyle").value;
-
-    let pools={
-        future:[
-            "strong chase potential",
-            "clear collector appeal",
-            "early hype potential",
-            "watchlist energy",
-            "a standout design",
-            "strong fan appeal",
-            "release-day attention",
-            "long-term interest"
-        ],
-        artworks:[
-            "beautiful artwork",
-            "a strong colour palette",
-            "great composition",
-            "proper binder appeal",
-            "instant visual impact",
-            "a memorable scene",
-            "display-piece energy",
-            "a standout illustration"
-        ],
-        cute:[
-            "pure wholesome energy",
-            "instant charm",
-            "feel-good artwork",
-            "cute fan appeal",
-            "a warm and happy scene",
-            "simple charm",
-            "soft cosy artwork",
-            "easy casual appeal"
-        ],
-        connected:[
-            "linked artwork appeal",
-            "a bigger-picture feeling",
-            "hidden visual connection",
-            "storytelling through artwork",
-            "a scene that feels connected",
-            "collector discovery appeal",
-            "matching card potential",
-            "a clever visual link"
-        ],
-        underrated:[
-            "hidden gem energy",
-            "underrated artwork",
-            "sleeper appeal",
-            "more quality than people realise",
-            "collector appeal people are missing",
-            "a card worth revisiting",
-            "quiet standout energy",
-            "overlooked visual impact"
-        ],
-        regret:[
-            "obvious appeal in hindsight",
-            "easy-to-underestimate artwork",
-            "collector appeal I missed",
-            "a card I should have bought sooner",
-            "stronger artwork than I remembered",
-            "quiet long-term appeal",
-            "a missed opportunity",
-            "a card that aged well"
-        ],
-        explode:[
-            "sleeper potential",
-            "watchlist energy",
-            "strong collector appeal",
-            "artwork people may catch onto",
-            "demand-building potential",
-            "a memorable design",
-            "character appeal",
-            "quiet hype potential"
-        ],
-        bestset:[
-            "set-defining appeal",
-            "the strongest identity in the set",
-            "memorable set artwork",
-            "clear standout energy",
-            "the card that represents the release",
-            "strong chase-card presence",
-            "lasting collector appeal",
-            "a card people associate with the set"
-        ],
-        darkest:[
-            "a genuinely unsettling atmosphere",
-            "creepy visual energy",
-            "dark artwork",
-            "a horror-style mood",
-            "strange atmospheric detail",
-            "a haunting scene",
-            "unusual Pokémon card energy",
-            "a darker tone than expected"
-        ],
-        happiest:[
-            "warm cheerful energy",
-            "pure good vibes",
-            "wholesome joy",
-            "a happy scene",
-            "uplifting artwork",
-            "feel-good collector appeal",
-            "bright positive energy",
-            "simple joyful charm"
-        ],
-        saddest:[
-            "a quiet emotional feeling",
-            "lonely atmosphere",
-            "subtle sadness",
-            "an emotional scene",
-            "a deeper mood",
-            "soft storytelling",
-            "a surprisingly touching moment",
-            "sad visual energy"
-        ],
-        stories:[
-            "strong visual storytelling",
-            "a full scene in one card",
-            "before-and-after energy",
-            "a moment frozen in time",
-            "a card that feels alive",
-            "story-driven artwork",
-            "a little world inside the card",
-            "atmosphere and personality"
-        ],
-        facts:[
-            "an interesting hidden detail",
-            "collector trivia appeal",
-            "a fact worth sharing",
-            "surprising card history",
-            "a detail people miss",
-            "background story potential",
-            "a memorable talking point",
-            "something collectors may not know"
-        ]
-    };
-
-    let styleBoosts={
-        artwork:["artwork that carries the card","strong display value","a scene that stands out"],
-        underrated:["people sleeping on it","hidden gem potential","overlooked quality"],
-        value:["long-term watchlist potential","collector demand potential","future interest"],
-        cute:["instant charm","wholesome appeal","feel-good energy"],
-        iconic:["memorable character appeal","recognisable design","strong presence"],
-        story:["visual storytelling","atmosphere","a proper sense of moment"],
-        manual:["clear collector appeal","a strong reason to stand out","instant impact"]
-    };
-
-    return (pools[videoType] || pools.artworks).concat(styleBoosts[style] || []);
-}
-
-function suggestNotes(){
-    let cards=getCards();
-    let pool=getThemeNotePool();
-    let used=[];
-
-    latestSuggestedNotes=cards.map(function(card,index){
-        let available=pool.filter(function(item){return !used.includes(item)});
-        if(available.length===0)available=pool;
-
-        let chosen=available[(index*3 + card.length) % available.length];
-        used.push(chosen);
-        return chosen;
-    });
-
-    latestSuggestedNotesText=
-`Card #1 - ${cards[0]}
-${latestSuggestedNotes[0]}
-
-Card #2 - ${cards[1]}
-${latestSuggestedNotes[1]}
-
-Card #3 - ${cards[2]}
-${latestSuggestedNotes[2]}
-
-Card #4 - ${cards[3]}
-${latestSuggestedNotes[3]}
-
-Card #5 - ${cards[4]}
-${latestSuggestedNotes[4]}`;
-
-    document.getElementById("noteSuggestionsOutput").textContent=latestSuggestedNotesText;
-}
-
-function applySuggestedNotes(){
-    if(latestSuggestedNotes.length===0){
-        suggestNotes();
-    }
-
-    document.getElementById("note1").value=latestSuggestedNotes[0] || "";
-    document.getElementById("note2").value=latestSuggestedNotes[1] || "";
-    document.getElementById("note3").value=latestSuggestedNotes[2] || "";
-    document.getElementById("note4").value=latestSuggestedNotes[3] || "";
-    document.getElementById("note5").value=latestSuggestedNotes[4] || "";
-
-    generateEverything();
-}
-
-function copySuggestedNotes(){
-    if(!latestSuggestedNotesText){
-        suggestNotes();
-    }
-    copyText(latestSuggestedNotesText,"Suggested notes copied!");
-}
-
-
 function generateEverything(){
     generateScript();
     generateCaptions();
@@ -1157,6 +961,8 @@ function getProjectData(){
         savedAt:new Date().toISOString(),
         videoType:document.getElementById("videoType").value,
         rankingStyle:document.getElementById("rankingStyle").value,
+        scriptMode:document.getElementById("scriptMode").value,
+        manualScript:document.getElementById("manualScript").value,
         setName:document.getElementById("setName").value,
         card1:document.getElementById("card1").value,
         card2:document.getElementById("card2").value,
@@ -1174,6 +980,8 @@ function getProjectData(){
 function applyProjectData(data){
     document.getElementById("videoType").value=data.videoType || "future";
     document.getElementById("rankingStyle").value=data.rankingStyle || "manual";
+    document.getElementById("scriptMode").value=data.scriptMode || "auto";
+    document.getElementById("manualScript").value=data.manualScript || "";
     document.getElementById("setName").value=data.setName || "";
     document.getElementById("card1").value=data.card1 || "";
     document.getElementById("card2").value=data.card2 || "";
@@ -1292,7 +1100,7 @@ window.addEventListener("load",function(){
 });
 
 function clearAll(){
-    let ids=["setName","card1","card2","card3","card4","card5","note1","note2","note3","note4","note5"];
+    let ids=["setName","manualScript","card1","card2","card3","card4","card5","note1","note2","note3","note4","note5"];
     ids.forEach(function(id){
         document.getElementById(id).value="";
     });
@@ -1317,9 +1125,6 @@ function clearAll(){
     document.getElementById("storyboardOutput").textContent="No storyboard generated yet.";
     document.getElementById("directorOutput").textContent="No director plan generated yet.";
     document.getElementById("ideasOutput").textContent="No ideas generated yet.";
-    document.getElementById("noteSuggestionsOutput").textContent="No note suggestions generated yet.";
-    latestSuggestedNotes=[];
-    latestSuggestedNotesText="";
     document.getElementById("videoText").textContent="Your preview will appear here";
     document.getElementById("videoText").style.display="block";
     document.getElementById("videoTimer").textContent="Not playing";
