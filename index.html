@@ -110,12 +110,21 @@ button{
 }
 
 .zoom{
-    animation:slowZoom 5s linear forwards;
+    animation:slowZoom 8s linear forwards;
+}
+
+.fadeIn{
+    animation:fadeIn 0.8s ease-in forwards, slowZoom 8s linear forwards;
+}
+
+@keyframes fadeIn{
+    from{opacity:0;}
+    to{opacity:1;}
 }
 
 @keyframes slowZoom{
     from{transform:scale(1)}
-    to{transform:scale(1.14)}
+    to{transform:scale(1.18)}
 }
 
 #videoText{
@@ -410,23 +419,19 @@ function buildScenes(){
     let images=getImages();
 
     return [
-        {image:"",text:getCaptionTheme(),time:"0:00 - 0:02",duration:2000,type:"hook"},
-        {image:images[4],text:"#5 "+cards[4],time:"0:02 - 0:07",duration:5000,type:"card"},
-        {image:"",text:"",time:"0:07 - 0:08",duration:1000,type:"pause"},
-        {image:images[3],text:"#4 "+cards[3],time:"0:08 - 0:13",duration:5000,type:"card"},
-        {image:"",text:"",time:"0:13 - 0:14",duration:1000,type:"pause"},
-        {image:images[2],text:"#3 "+cards[2],time:"0:14 - 0:19",duration:5000,type:"card"},
-        {image:"",text:"",time:"0:19 - 0:20",duration:1000,type:"pause"},
-        {image:images[1],text:"#2 "+cards[1],time:"0:20 - 0:25",duration:5000,type:"card"},
-        {image:"",text:"",time:"0:25 - 0:26",duration:1000,type:"pause"},
-        {image:images[0],text:"#1 "+cards[0],time:"0:26 - 0:31",duration:5000,type:"card"},
-        {image:"",text:"DID I GET THIS RIGHT?",time:"0:31 - 0:33",duration:2000,type:"cta"}
+        {image:"",text:getCaptionTheme(),time:"0:00 - 0:03",duration:3000,type:"hook"},
+        {image:images[4],text:"#5 "+cards[4],time:"0:03 - 0:11",duration:8000,type:"card"},
+        {image:images[3],text:"#4 "+cards[3],time:"0:11 - 0:19",duration:8000,type:"card"},
+        {image:images[2],text:"#3 "+cards[2],time:"0:19 - 0:27",duration:8000,type:"card"},
+        {image:images[1],text:"#2 "+cards[1],time:"0:27 - 0:35",duration:8000,type:"card"},
+        {image:images[0],text:"#1 "+cards[0],time:"0:35 - 0:43",duration:8000,type:"card"},
+        {image:"",text:"DID I GET THIS RIGHT?",time:"0:43 - 0:46",duration:3000,type:"cta"}
     ];
 }
 
 function generateStoryboard(){
     let scenes=buildScenes();
-    let html="<h3>33 Second Storyboard</h3>";
+    let html="<h3>46 Second Storyboard</h3>";
     let plain=[];
 
     scenes.forEach(function(scene){
@@ -456,12 +461,14 @@ function playVideoPreview(){
     scenes.forEach(function(scene){
         let id=setTimeout(function(){
             videoImage.classList.remove("zoom");
+            videoImage.classList.remove("fadeIn");
             void videoImage.offsetWidth;
 
             if(scene.image){
                 videoImage.src=scene.image;
                 videoImage.style.display="block";
-                videoImage.classList.add("zoom");
+                videoImage.style.opacity="0";
+                videoImage.classList.add("fadeIn");
             }else{
                 videoImage.removeAttribute("src");
                 videoImage.style.display="none";
@@ -626,11 +633,22 @@ async function downloadWebMVideo(){
             ctx.fillRect(0,0,canvas.width,canvas.height);
 
             if(img){
-                let scale=1+(progress*0.12);
+                let scale=1+(progress*0.18);
                 let ratio=Math.min((canvas.width*0.82)/img.width,(canvas.height*0.68)/img.height)*scale;
                 let w=img.width*ratio;
                 let h=img.height*ratio;
 
+                let fadeFrames=24;
+                let alpha=1;
+
+                if(frame<fadeFrames){
+                    alpha=frame/fadeFrames;
+                }else if(frame>frames-fadeFrames){
+                    alpha=(frames-frame)/fadeFrames;
+                }
+
+                ctx.save();
+                ctx.globalAlpha=Math.max(0,Math.min(1,alpha));
                 ctx.drawImage(
                     img,
                     (canvas.width-w)/2,
@@ -638,6 +656,7 @@ async function downloadWebMVideo(){
                     w,
                     h
                 );
+                ctx.restore();
             }
 
             if(scene.text){
