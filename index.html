@@ -298,6 +298,14 @@ button{
 </div>
 
 <div class="section">
+<h2>Export TikTok Package</h2>
+<p class="small">Creates one clean block containing your script, captions, post caption, hashtags, storyboard, and director plan.</p>
+<button onclick="generateTikTokPackage()">Generate TikTok Package</button>
+<div id="packageOutput" class="copyBox">No package generated yet.</div>
+<button onclick="copyTikTokPackage()">Copy TikTok Package</button>
+</div>
+
+<div class="section">
 <h2>Video Preview</h2>
 <div id="videoFrame">
 <img id="videoImage">
@@ -315,6 +323,7 @@ let latestHashtags="";
 let latestStoryboard="";
 let latestDirectorPlan="";
 let latestIdeas="";
+let latestTikTokPackage="";
 let previewTimeouts=[];
 
 function randomItem(list){
@@ -1099,6 +1108,72 @@ window.addEventListener("load",function(){
     refreshProjectList();
 });
 
+
+function generateTikTokPackage(){
+    generateEverything();
+
+    let setName=document.getElementById("setName").value.trim() || "Untitled Video";
+    let videoType=document.getElementById("videoType").options[document.getElementById("videoType").selectedIndex].text;
+    let rankingStyle=document.getElementById("rankingStyle").options[document.getElementById("rankingStyle").selectedIndex].text;
+    let scriptMode=document.getElementById("scriptMode").options[document.getElementById("scriptMode").selectedIndex].text;
+
+    latestTikTokPackage=
+`POKÉSHORTS TIKTOK PACKAGE
+
+VIDEO:
+${setName}
+
+TYPE:
+${videoType}
+
+RANKING:
+${rankingStyle}
+
+SCRIPT MODE:
+${scriptMode}
+
+------------------------------
+TIKTOK VOICE SCRIPT
+------------------------------
+${latestTikTokScript}
+
+------------------------------
+ON-SCREEN CAPTIONS
+------------------------------
+${latestCaptions}
+
+------------------------------
+POST CAPTION
+------------------------------
+${latestPostCaption}
+
+------------------------------
+HASHTAGS
+------------------------------
+${latestHashtags}
+
+------------------------------
+STORYBOARD
+------------------------------
+${latestStoryboard}
+
+------------------------------
+VIDEO DIRECTOR PLAN
+------------------------------
+${latestDirectorPlan}
+`;
+
+    document.getElementById("packageOutput").textContent=latestTikTokPackage;
+}
+
+function copyTikTokPackage(){
+    if(!latestTikTokPackage){
+        generateTikTokPackage();
+    }
+
+    copyText(latestTikTokPackage,"TikTok package copied!");
+}
+
 function clearAll(){
     let ids=["setName","manualScript","card1","card2","card3","card4","card5","note1","note2","note3","note4","note5"];
     ids.forEach(function(id){
@@ -1128,6 +1203,8 @@ function clearAll(){
     document.getElementById("videoText").textContent="Your preview will appear here";
     document.getElementById("videoText").style.display="block";
     document.getElementById("videoTimer").textContent="Not playing";
+    document.getElementById("packageOutput").textContent="No package generated yet.";
+    latestTikTokPackage="";
     document.getElementById("projectStatus").textContent="Cleared current working project. Saved projects were not deleted.";
     clearPreviewTimers();
 }
