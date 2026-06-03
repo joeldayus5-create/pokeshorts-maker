@@ -4,9 +4,9 @@
 <title>PokéShorts Maker</title>
 <style>
 body{font-family:Arial,sans-serif;padding:20px;background:#111;color:white}
-input,select{width:100%;padding:10px;font-size:18px;margin-bottom:10px;border-radius:8px;border:none;box-sizing:border-box}
+input,select,textarea{width:100%;padding:10px;font-size:18px;margin-bottom:10px;border-radius:8px;border:none;box-sizing:border-box} textarea{min-height:70px;font-size:16px;resize:vertical}
 button{width:100%;padding:12px;font-size:18px;border:none;border-radius:8px;cursor:pointer;margin-top:10px}
-#output,#storyboard,#videoSection,#exportSection,#ideasSection,#hashtagsSection,#captionsSection{margin-top:20px;padding:15px;background:#222;border-radius:10px}
+#output,#storyboard,#videoSection,#exportSection{margin-top:20px;padding:15px;background:#222;border-radius:10px}
 pre{white-space:pre-wrap;line-height:1.6;font-family:Arial,sans-serif}
 .imageBox{margin-top:15px;padding:10px;background:#1a1a1a;border-radius:10px}
 .preview{width:100%;max-height:300px;object-fit:contain;margin-top:10px;border-radius:8px;background:#000}
@@ -19,9 +19,6 @@ pre{white-space:pre-wrap;line-height:1.6;font-family:Arial,sans-serif}
 #videoTimer,#exportStatus{text-align:center;font-size:14px;color:#ccc;margin-top:10px}
 a.downloadLink{display:block;margin-top:15px;padding:12px;border-radius:8px;background:white;color:black;text-align:center;text-decoration:none;font-weight:bold}
 .small{font-size:14px;color:#ccc;line-height:1.5}
-.copyBox{margin-top:10px;padding:12px;background:#333;border-radius:8px;white-space:pre-wrap;line-height:1.5}
-.pill{display:inline-block;background:#333;padding:8px 10px;border-radius:20px;margin:4px;font-size:14px}
-.idea{margin-bottom:10px;padding:10px;background:#333;border-radius:8px}
 </style>
 </head>
 <body>
@@ -52,48 +49,35 @@ a.downloadLink{display:block;margin-top:15px;padding:12px;border-radius:8px;back
 </select>
 
 <input id="setName" placeholder="Set name / theme">
-<input id="card1" placeholder="Card #1">
-<input id="card2" placeholder="Card #2">
-<input id="card3" placeholder="Card #3">
-<input id="card4" placeholder="Card #4">
-<input id="card5" placeholder="Card #5">
 
-<div class="imageBox"><strong>Image for Card #1</strong><input type="file" accept="image/*" onchange="previewImage(event,'preview1')"><img id="preview1" class="preview"></div>
-<div class="imageBox"><strong>Image for Card #2</strong><input type="file" accept="image/*" onchange="previewImage(event,'preview2')"><img id="preview2" class="preview"></div>
-<div class="imageBox"><strong>Image for Card #3</strong><input type="file" accept="image/*" onchange="previewImage(event,'preview3')"><img id="preview3" class="preview"></div>
-<div class="imageBox"><strong>Image for Card #4</strong><input type="file" accept="image/*" onchange="previewImage(event,'preview4')"><img id="preview4" class="preview"></div>
-<div class="imageBox"><strong>Image for Card #5</strong><input type="file" accept="image/*" onchange="previewImage(event,'preview5')"><img id="preview5" class="preview"></div>
+<input id="card1" placeholder="Card #1">
+<textarea id="note1" placeholder="Optional note for Card #1 - e.g. face of the set, beautiful artwork, underrated, linked artwork"></textarea>
+
+<input id="card2" placeholder="Card #2">
+<textarea id="note2" placeholder="Optional note for Card #2"></textarea>
+
+<input id="card3" placeholder="Card #3">
+<textarea id="note3" placeholder="Optional note for Card #3"></textarea>
+
+<input id="card4" placeholder="Card #4">
+<textarea id="note4" placeholder="Optional note for Card #4"></textarea>
+
+<input id="card5" placeholder="Card #5">
+<textarea id="note5" placeholder="Optional note for Card #5"></textarea>
+
+<button onclick="autoFillNamesFromFiles()">Auto-Fill Card Names From Image Files</button>
+
+<div class="imageBox"><strong>Image for Card #1</strong><input type="file" accept="image/*" onchange="previewImage(event,'preview1',1)"><img id="preview1" class="preview"></div>
+<div class="imageBox"><strong>Image for Card #2</strong><input type="file" accept="image/*" onchange="previewImage(event,'preview2',2)"><img id="preview2" class="preview"></div>
+<div class="imageBox"><strong>Image for Card #3</strong><input type="file" accept="image/*" onchange="previewImage(event,'preview3',3)"><img id="preview3" class="preview"></div>
+<div class="imageBox"><strong>Image for Card #4</strong><input type="file" accept="image/*" onchange="previewImage(event,'preview4',4)"><img id="preview4" class="preview"></div>
+<div class="imageBox"><strong>Image for Card #5</strong><input type="file" accept="image/*" onchange="previewImage(event,'preview5',5)"><img id="preview5" class="preview"></div>
 
 <button onclick="generateScript()">Generate 30 Second Script</button>
 <button onclick="copyScript()">Copy Full Script</button>
 <button onclick="copyTikTokVoiceScript()">Copy TikTok Voice Script</button>
 <button onclick="generateStoryboard()">Generate Storyboard</button>
 <button onclick="playVideoPreview()">Generate Video Preview</button>
-<button onclick="generateCaptions()">Generate On-Screen Captions</button>
-<button onclick="generateHashtags()">Generate Hashtags</button>
-<button onclick="generateVideoIdeas()">Generate 30 Video Ideas</button>
-
-<div id="captionsSection">
-<h2>On-Screen Captions</h2>
-<p class="small">Use these as text overlays in TikTok or CapCut.</p>
-<div id="captionsOutput" class="copyBox">No captions generated yet.</div>
-<button onclick="copyCaptions()">Copy Captions</button>
-</div>
-
-<div id="hashtagsSection">
-<h2>Hashtags & Post Caption</h2>
-<div id="postCaptionOutput" class="copyBox">No post caption generated yet.</div>
-<div id="hashtagsOutput" class="copyBox">No hashtags generated yet.</div>
-<button onclick="copyPostCaption()">Copy Post Caption</button>
-<button onclick="copyHashtags()">Copy Hashtags</button>
-</div>
-
-<div id="ideasSection">
-<h2>Content Ideas</h2>
-<p class="small">Generate repeatable Pokémon TikTok ideas when you do not know what to post next.</p>
-<div id="ideasOutput">No ideas generated yet.</div>
-<button onclick="copyIdeas()">Copy Ideas</button>
-</div>
 
 <div id="exportSection">
 <h2>Export Video</h2>
@@ -114,17 +98,69 @@ a.downloadLink{display:block;margin-top:15px;padding:12px;border-radius:8px;back
 <div id="storyboard"></div>
 
 <script>
-let latestScript="",latestTikTokScript="",latestCaptions="",latestHashtags="",latestPostCaption="",latestIdeas="",previewTimeouts=[];
+let latestScript="",latestTikTokScript="",previewTimeouts=[],uploadedFileNames=["","","","",""];
 
 function randomItem(list){return list[Math.floor(Math.random()*list.length)]}
 function clearPreviewTimers(){previewTimeouts.forEach(t=>clearTimeout(t));previewTimeouts=[]}
-function previewImage(event,previewId){let file=event.target.files[0];if(file){let reader=new FileReader();reader.onload=e=>document.getElementById(previewId).src=e.target.result;reader.readAsDataURL(file)}}
+function previewImage(event,previewId,cardNumber){
+let file=event.target.files[0];
+if(file){
+uploadedFileNames[cardNumber-1]=file.name;
+let reader=new FileReader();
+reader.onload=e=>document.getElementById(previewId).src=e.target.result;
+reader.readAsDataURL(file);
+
+let cardInput=document.getElementById("card"+cardNumber);
+if(cardInput && !cardInput.value.trim()){
+cardInput.value=cleanFileNameToCardName(file.name);
+}
+}
+}
+
+function cleanFileNameToCardName(fileName){
+let name=fileName.replace(/\.[^/.]+$/,"");
+name=name.replace(/[_-]+/g," ");
+name=name.replace(/\b(img|image|screenshot|download|edited|copy)\b/gi,"");
+name=name.replace(/\d{6,}/g,"");
+name=name.replace(/\s+/g," ").trim();
+return name || "Card";
+}
+
+function autoFillNamesFromFiles(){
+for(let i=1;i<=5;i++){
+let input=document.getElementById("card"+i);
+if(uploadedFileNames[i-1]){
+input.value=cleanFileNameToCardName(uploadedFileNames[i-1]);
+}
+}
+alert("Card names filled from image file names where possible.");
+}
 function getCards(){return[
 document.getElementById("card1").value||"Card 1",
 document.getElementById("card2").value||"Card 2",
 document.getElementById("card3").value||"Card 3",
 document.getElementById("card4").value||"Card 4",
 document.getElementById("card5").value||"Card 5"]}
+function getCardNotes(){return[
+document.getElementById("note1").value||"",
+document.getElementById("note2").value||"",
+document.getElementById("note3").value||"",
+document.getElementById("note4").value||"",
+document.getElementById("note5").value||""]}
+
+function makeCardLine(rank,card,note,vibe){
+let reason="";
+if(note.trim()){
+reason=note.trim();
+}else{
+reason=randomItem(vibe.card);
+}
+if(rank===1){
+return `And at number one, ${card}. ${randomItem(vibe.top)} ${reason}`;
+}
+return `At number ${rank}, ${card}. ${reason}`;
+}
+
 function getImages(){return[
 document.getElementById("preview1").src,
 document.getElementById("preview2").src,
@@ -225,15 +261,18 @@ return map[videoType]||`TOP 5 ${setName.toUpperCase()} CARDS`;
 }
 
 function generateTopFiveScript(title,cards,vibe){
+let notes=getCardNotes();
+
 let parts=[
 title,
-`At number five, ${cards[4]}. ${randomItem(vibe.card)}`,
-`At number four, ${cards[3]}. ${randomItem(vibe.card)}`,
-`At number three, ${cards[2]}. ${randomItem(vibe.card)}`,
-`At number two, ${cards[1]}. ${randomItem(vibe.card)}`,
-`And at number one, ${cards[0]}. ${randomItem(vibe.top)}`,
+makeCardLine(5,cards[4],notes[4],vibe),
+makeCardLine(4,cards[3],notes[3],vibe),
+makeCardLine(3,cards[2],notes[2],vibe),
+makeCardLine(2,cards[1],notes[1],vibe),
+makeCardLine(1,cards[0],notes[0],vibe),
 randomItem(vibe.endings)
 ];
+
 latestTikTokScript=parts.join("\n\n");
 return latestTikTokScript;
 }
@@ -246,8 +285,6 @@ let vibe=getVibe(videoType,setName);
 let title=randomItem(vibe.hooks);
 latestScript=generateTopFiveScript(title,cards,vibe);
 document.getElementById("output").innerHTML="<pre>"+latestScript+"</pre>";
-generateCaptions();
-generateHashtags();
 }
 
 function buildScenes(){
@@ -358,133 +395,6 @@ await new Promise(r=>setTimeout(r,1000/30));
 }
 recorder.stop();
 }
-
-
-function generateCaptions(){
-let videoType=document.getElementById("videoType").value;
-let setName=document.getElementById("setName").value||"Pokémon cards";
-let cards=getCards();
-let theme=getCaptionTheme(videoType,setName);
-
-let punchLines={
-future:["CHASE POTENTIAL","ONE TO WATCH","COULD BE HUGE","SLEEPER PICK","HEADLINE CARD"],
-artworks:["INSANE ARTWORK","BINDER-WORTHY","BEAUTIFUL CARD","STUNNING SCENE","ARTWORK PERFECTION"],
-cute:["PURE HAPPINESS","TOO CUTE","WHOLESOME PICK","INSTANT SMILE","CUTEST CARD"],
-connected:["LINKED ARTWORK","BIGGER PICTURE","HIDDEN CONNECTION","STORY CARD","MATCHING ART"],
-underrated:["SLEEPER CARD","HIDDEN GEM","OVERLOOKED PICK","UNDERRATED","DESERVES HYPE"],
-regret:["I FUMBLED THIS","SHOULD HAVE BOUGHT","BIG REGRET","MISSED OUT","PAINFUL CARD"],
-explode:["COULD EXPLODE","WATCH THIS CARD","SLEEPER POTENTIAL","DON'T IGNORE","COULD MOVE FAST"],
-bestset:["BEST FROM SET","STANDOUT CARD","SET DEFINING","TOP PICK","BEST CHASE"],
-darkest:["CREEPY ART","DARK ENERGY","UNSETTLING CARD","SCARY VIBE","NOT CUTE"],
-happiest:["GOOD VIBES","PURE JOY","WHOLESOME CARD","HAPPY ART","FEEL-GOOD PICK"],
-saddest:["EMOTIONAL CARD","SAD STORY","HITS HARD","DEEP ARTWORK","HEARTBREAKING"],
-stories:["TELLS A STORY","LOOK CLOSER","TINY STORY","VISUAL STORY","FULL SCENE"],
-facts:["CRAZY FACT","DID YOU KNOW?","HIDDEN HISTORY","WILD DETAIL","CARD FACT"]
-};
-
-let lines=punchLines[videoType]||punchLines.future;
-
-latestCaptions =
-`${theme}
-
-#5 ${cards[4]}
-${lines[0]}
-
-#4 ${cards[3]}
-${lines[1]}
-
-#3 ${cards[2]}
-${lines[2]}
-
-#2 ${cards[1]}
-${lines[3]}
-
-#1 ${cards[0]}
-${lines[4]}
-
-DID I GET THIS RIGHT?`;
-
-document.getElementById("captionsOutput").textContent=latestCaptions;
-}
-
-function generateHashtags(){
-let videoType=document.getElementById("videoType").value;
-let setName=document.getElementById("setName").value||"pokemon";
-let cleanSet=setName.toLowerCase().replace(/[^a-z0-9]/g,"");
-
-let topicTags={
-future:["#pokemoninvesting","#pokemontcgnews","#pokemoncards"],
-artworks:["#pokemonart","#pokemonartwork","#tcgart"],
-cute:["#cutepokemon","#wholesomepokemon","#pokemoncommunity"],
-connected:["#pokemonartwork","#connectedart","#tcgcollector"],
-underrated:["#underratedpokemon","#hiddengem","#pokemoncollector"],
-regret:["#pokemonregret","#cardcollector","#pokemoninvesting"],
-explode:["#pokemoninvesting","#sleepercard","#pokemonmarket"],
-bestset:["#pokemonsets","#bestpokemoncards","#tcgcollector"],
-darkest:["#creepypokemon","#darkpokemon","#pokemonlore"],
-happiest:["#wholesomepokemon","#happypokemon","#pokemoncommunity"],
-saddest:["#pokemonlore","#sadpokemon","#pokemonstory"],
-stories:["#pokemonstory","#pokemonlore","#tcgart"],
-facts:["#pokemonfacts","#didyouknow","#pokemonhistory"]
-};
-
-let tags=["#pokemon","#pokemontcg","#pokemoncards","#tcg","#cardcollector","#pokemoncommunity"];
-if(cleanSet){tags.push("#"+cleanSet);}
-tags=tags.concat(topicTags[videoType]||[]);
-
-latestHashtags=[...new Set(tags)].join(" ");
-
-let cards=getCards();
-latestPostCaption=`My Top 5 picks for ${setName}. Number 1 has to be ${cards[0]} for me. Which card would you change?`;
-
-document.getElementById("postCaptionOutput").textContent=latestPostCaption;
-document.getElementById("hashtagsOutput").textContent=latestHashtags;
-}
-
-function generateVideoIdeas(){
-let ideas=[
-"Top 5 cutest Pokémon cards ever",
-"Top 5 darkest Pokémon card artworks",
-"Top 5 saddest Pokémon cards",
-"Top 5 happiest Pokémon cards",
-"Top 5 cards with connected artwork",
-"Top 5 cards that tell a story",
-"Top 5 underrated modern Pokémon cards",
-"Top 5 cards I regret not buying",
-"Top 5 cards that could explode in popularity",
-"Top 5 best artworks from older sets",
-"Top 5 cards that look better in Japanese",
-"Top 5 cards under £10",
-"Top 5 Pikachu artworks",
-"Top 5 Eeveelution cards",
-"Top 5 Charizard cards that are not obvious picks",
-"Top 5 Gengar artworks",
-"Top 5 cards with hidden details",
-"Top 5 cards casual fans would love",
-"Top 5 cards collectors are sleeping on",
-"Top 5 cards from Scarlet and Violet era",
-"Top 5 Sword and Shield era artworks",
-"Top 5 cards I would grade",
-"Top 5 cards I would display",
-"Top 5 cards that feel nostalgic",
-"Top 5 cards that look expensive but are affordable",
-"Top 5 Pokémon card facts people do not know",
-"Top 5 cards with creepy backstories",
-"Top 5 cards that deserve more hype",
-"Top 5 cards I would buy before people notice",
-"Top 5 cards that prove Pokémon art is underrated"
-];
-
-latestIdeas=ideas.map((idea,index)=>(index+1)+". "+idea).join("\\n");
-let html="";
-ideas.forEach((idea,index)=>{html+=`<div class="idea"><strong>${index+1}.</strong> ${idea}</div>`});
-document.getElementById("ideasOutput").innerHTML=html;
-}
-
-function copyCaptions(){if(!latestCaptions)generateCaptions();navigator.clipboard.writeText(latestCaptions);alert("Captions copied!")}
-function copyPostCaption(){if(!latestPostCaption)generateHashtags();navigator.clipboard.writeText(latestPostCaption);alert("Post caption copied!")}
-function copyHashtags(){if(!latestHashtags)generateHashtags();navigator.clipboard.writeText(latestHashtags);alert("Hashtags copied!")}
-function copyIdeas(){if(!latestIdeas)generateVideoIdeas();navigator.clipboard.writeText(latestIdeas);alert("Video ideas copied!")}
 
 function copyScript(){if(!latestScript)generateScript();navigator.clipboard.writeText(latestScript);alert("Full script copied!")}
 function copyTikTokVoiceScript(){if(!latestTikTokScript)generateScript();navigator.clipboard.writeText(latestTikTokScript);alert("TikTok voice script copied!")}
