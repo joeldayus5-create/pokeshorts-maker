@@ -6,7 +6,7 @@
 body{font-family:Arial,sans-serif;padding:20px;background:#111;color:white}
 input,select,textarea{width:100%;padding:10px;font-size:18px;margin-bottom:10px;border-radius:8px;border:none;box-sizing:border-box} textarea{min-height:70px;font-size:16px;resize:vertical}
 button{width:100%;padding:12px;font-size:18px;border:none;border-radius:8px;cursor:pointer;margin-top:10px}
-#output,#storyboard,#videoSection,#exportSection{margin-top:20px;padding:15px;background:#222;border-radius:10px}
+#output,#storyboard,#videoSection,#exportSection,#directorSection{margin-top:20px;padding:15px;background:#222;border-radius:10px}
 pre{white-space:pre-wrap;line-height:1.6;font-family:Arial,sans-serif}
 .imageBox{margin-top:15px;padding:10px;background:#1a1a1a;border-radius:10px}
 .preview{width:100%;max-height:300px;object-fit:contain;margin-top:10px;border-radius:8px;background:#000}
@@ -48,6 +48,16 @@ a.downloadLink{display:block;margin-top:15px;padding:12px;border-radius:8px;back
 <option value="news">News Mode</option>
 </select>
 
+<select id="rankingStyle">
+<option value="manual">Ranking Style: Manual Order</option>
+<option value="artwork">Ranking Style: Best Artwork</option>
+<option value="underrated">Ranking Style: Most Underrated</option>
+<option value="value">Ranking Style: Value Potential</option>
+<option value="cute">Ranking Style: Cutest</option>
+<option value="iconic">Ranking Style: Most Iconic</option>
+<option value="story">Ranking Style: Best Storytelling</option>
+</select>
+
 <input id="setName" placeholder="Set name / theme">
 
 <input id="card1" placeholder="Card #1">
@@ -79,6 +89,13 @@ a.downloadLink{display:block;margin-top:15px;padding:12px;border-radius:8px;back
 <button onclick="generateStoryboard()">Generate Storyboard</button>
 <button onclick="playVideoPreview()">Generate Video Preview</button>
 
+<div id="directorSection">
+<h2>AI Video Director Plan</h2>
+<p class="small">Use this to guide edits, zooms, transitions, and what to focus on visually.</p>
+<div id="directorOutput" class="copyBox">No director plan generated yet.</div>
+<button onclick="copyDirectorPlan()">Copy Director Plan</button>
+</div>
+
 <div id="exportSection">
 <h2>Export Video</h2>
 <p class="small">Step 1: Create WebM video. Step 2: try experimental MP4 conversion. MP4 conversion uses FFmpeg WebAssembly and may take a while on mobile.</p>
@@ -98,7 +115,7 @@ a.downloadLink{display:block;margin-top:15px;padding:12px;border-radius:8px;back
 <div id="storyboard"></div>
 
 <script>
-let latestScript="",latestTikTokScript="",previewTimeouts=[],uploadedFileNames=["","","","",""];
+let latestScript="",latestTikTokScript="",latestCaptions="",latestHashtags="",latestPostCaption="",latestIdeas="",latestDirectorPlan="",previewTimeouts=[],uploadedFileNames=["","","","",""];
 
 function randomItem(list){return list[Math.floor(Math.random()*list.length)]}
 function clearPreviewTimers(){previewTimeouts.forEach(t=>clearTimeout(t));previewTimeouts=[]}
@@ -136,11 +153,20 @@ input.value=cleanFileNameToCardName(uploadedFileNames[i-1]);
 alert("Card names filled from image file names where possible.");
 }
 function getCards(){return[
-document.getElementById("card1").value||"Card 1",
-document.getElementById("card2").value||"Card 2",
-document.getElementById("card3").value||"Card 3",
-document.getElementById("card4").value||"Card 4",
-document.getElementById("card5").value||"Card 5"]}
+document.getElementById("card1").value.trim()||"Card 1",
+document.getElementById("card2").value.trim()||"Card 2",
+document.getElementById("card3").value.trim()||"Card 3",
+document.getElementById("card4").value.trim()||"Card 4",
+document.getElementById("card5").value.trim()||"Card 5"]}
+
+function checkMissingCardNames(){
+let cards=getCards();
+let missing=cards.filter(card=>/^Card [1-5]$/.test(card));
+if(missing.length>0){
+return "Tip: some card names are still blank. Add names manually or use clearer image filenames for better scripts.";
+}
+return "";
+}
 function getCardNotes(){return[
 document.getElementById("note1").value||"",
 document.getElementById("note2").value||"",
@@ -260,16 +286,80 @@ facts:"TOP 5 CRAZY CARD FACTS"
 return map[videoType]||`TOP 5 ${setName.toUpperCase()} CARDS`;
 }
 
+
+function getRankingIntro(rankingStyle,setName){
+let intros={
+manual:`Top 5 cards I would rank from ${setName}.`,
+artwork:`Top 5 cards from ${setName} based purely on artwork.`,
+underrated:`Top 5 cards from ${setName} that feel seriously underrated.`,
+value:`Top 5 cards from ${setName} I would watch for value potential.`,
+cute:`Top 5 cutest cards from ${setName}.`,
+iconic:`Top 5 most iconic cards from ${setName}.`,
+story:`Top 5 cards from ${setName} with the best visual storytelling.`
+};
+return intros[rankingStyle]||intros.manual;
+}
+
+function getRankingReason(rankingStyle,card,note){
+if(note && note.trim()){
+return note.trim();
+}
+
+let reasons={
+manual:[
+`${card} earns its place because it stands out instantly.`,
+`${card} feels like one of the strongest picks on this list.`,
+`${card} has the kind of appeal that makes it hard to ignore.`
+],
+artwork:[
+`${card} has artwork that immediately catches the eye.`,
+`${card} stands out because of the colours, composition, and overall scene.`,
+`${card} feels like the kind of artwork collectors would want to display.`
+],
+underrated:[
+`${card} does not get talked about enough compared with how good it looks.`,
+`${card} feels like a hidden gem that more collectors should notice.`,
+`${card} has more appeal than people give it credit for.`
+],
+value:[
+`${card} has the kind of collector appeal that could build over time.`,
+`${card} is one I would personally keep an eye on.`,
+`${card} could become more interesting if demand around the set grows.`
+],
+cute:[
+`${card} has that wholesome charm that instantly makes people smile.`,
+`${card} is the kind of card casual fans and collectors both connect with.`,
+`${card} is just pure feel-good Pokémon energy.`
+],
+iconic:[
+`${card} feels memorable and instantly recognisable.`,
+`${card} has the kind of character appeal that makes it stand out.`,
+`${card} feels like one of the cards people will remember from this list.`
+],
+story:[
+`${card} feels like one moment from a bigger story.`,
+`${card} makes you wonder what happened before and after the artwork.`,
+`${card} does more than show a Pokémon, it creates a whole little scene.`
+]
+};
+
+return randomItem(reasons[rankingStyle]||reasons.manual);
+}
+
 function generateTopFiveScript(title,cards,vibe){
 let notes=getCardNotes();
+let rankingStyle=document.getElementById("rankingStyle").value;
+let setName=document.getElementById("setName").value||"Pokémon cards";
+
+let intro=getRankingIntro(rankingStyle,setName);
 
 let parts=[
-title,
-makeCardLine(5,cards[4],notes[4],vibe),
-makeCardLine(4,cards[3],notes[3],vibe),
-makeCardLine(3,cards[2],notes[2],vibe),
-makeCardLine(2,cards[1],notes[1],vibe),
-makeCardLine(1,cards[0],notes[0],vibe),
+intro,
+`At number five, ${cards[4]}. ${getRankingReason(rankingStyle,cards[4],notes[4])}`,
+`At number four, ${cards[3]}. ${getRankingReason(rankingStyle,cards[3],notes[3])}`,
+`At number three, ${cards[2]}. ${getRankingReason(rankingStyle,cards[2],notes[2])}`,
+`At number two, ${cards[1]}. ${getRankingReason(rankingStyle,cards[1],notes[1])}`,
+`And at number one, ${cards[0]}. ${randomItem(vibe.top)} ${getRankingReason(rankingStyle,cards[0],notes[0])}`,
 randomItem(vibe.endings)
 ];
 
@@ -284,7 +374,8 @@ let cards=getCards();
 let vibe=getVibe(videoType,setName);
 let title=randomItem(vibe.hooks);
 latestScript=generateTopFiveScript(title,cards,vibe);
-document.getElementById("output").innerHTML="<pre>"+latestScript+"</pre>";
+let warning=checkMissingCardNames();
+document.getElementById("output").innerHTML="<pre>"+latestScript+(warning ? "\n\n" + warning : "")+"</pre>";
 }
 
 function buildScenes(){
@@ -394,6 +485,83 @@ await new Promise(r=>setTimeout(r,1000/30));
 }
 }
 recorder.stop();
+}
+
+
+function generateDirectorStoryboard(){
+let cards=getCards();
+let notes=getCardNotes();
+let rankingStyle=document.getElementById("rankingStyle").value;
+let setName=document.getElementById("setName").value||"Pokémon cards";
+let theme=getCaptionTheme(document.getElementById("videoType").value,setName);
+
+let focusLines=[
+"Slow zoom toward the centre of the card.",
+"Add a quick flash transition before the next card.",
+"Hold the card still for the first second, then slowly zoom in.",
+"Place the card name in bold at the bottom.",
+"Use a subtle pulse on the text when the card number appears."
+];
+
+let plan=[
+`VIDEO DIRECTOR PLAN: ${theme}`,
+"",
+"0:00 - 0:02",
+"Hook screen. Use bold text, dark background, and a fast punch-in zoom.",
+`Text: ${theme}`,
+"",
+"0:02 - 0:07",
+`Card #5: ${cards[4]}`,
+`Focus: ${notes[4] || getRankingReason(rankingStyle,cards[4],"")}`,
+randomItem(focusLines),
+"",
+"0:07 - 0:08",
+"One second pause. Use a flash or swipe transition.",
+"",
+"0:08 - 0:13",
+`Card #4: ${cards[3]}`,
+`Focus: ${notes[3] || getRankingReason(rankingStyle,cards[3],"")}`,
+randomItem(focusLines),
+"",
+"0:13 - 0:14",
+"One second pause. Keep rhythm fast.",
+"",
+"0:14 - 0:19",
+`Card #3: ${cards[2]}`,
+`Focus: ${notes[2] || getRankingReason(rankingStyle,cards[2],"")}`,
+randomItem(focusLines),
+"",
+"0:19 - 0:20",
+"One second pause. Add a beat drop or quick zoom reset.",
+"",
+"0:20 - 0:25",
+`Card #2: ${cards[1]}`,
+`Focus: ${notes[1] || getRankingReason(rankingStyle,cards[1],"")}`,
+randomItem(focusLines),
+"",
+"0:25 - 0:26",
+"One second pause. Build tension before number one.",
+"",
+"0:26 - 0:31",
+`Card #1: ${cards[0]}`,
+`Focus: ${notes[0] || getRankingReason(rankingStyle,cards[0],"")}`,
+"Make this the strongest visual moment. Use the biggest zoom and clearest caption.",
+"",
+"0:31 - 0:33",
+"CTA screen.",
+"Text: DID I GET THIS RIGHT?",
+"",
+checkMissingCardNames()
+];
+
+latestDirectorPlan=plan.join("\n");
+document.getElementById("directorOutput").textContent=latestDirectorPlan;
+}
+
+function copyDirectorPlan(){
+if(!latestDirectorPlan)generateDirectorStoryboard();
+navigator.clipboard.writeText(latestDirectorPlan);
+alert("Director plan copied!");
 }
 
 function copyScript(){if(!latestScript)generateScript();navigator.clipboard.writeText(latestScript);alert("Full script copied!")}
