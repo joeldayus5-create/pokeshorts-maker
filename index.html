@@ -308,6 +308,7 @@ let latestStoryboard="";
 let latestDirectorPlan="";
 let latestIdeas="";
 let previewTimeouts=[];
+let usedScriptTemplates=[];
 
 function randomItem(list){
     return list[Math.floor(Math.random()*list.length)];
@@ -419,69 +420,95 @@ function tidyNote(note){
     return note.replace(/[.!?]+$/,"").replace(/\s+/g," ").trim();
 }
 
+function pickUniqueTemplate(list){
+    let available=list.filter(function(item){
+        return !usedScriptTemplates.includes(item.id);
+    });
+
+    if(available.length===0){
+        available=list;
+    }
+
+    let chosen=randomItem(available);
+    usedScriptTemplates.push(chosen.id);
+    return chosen.text;
+}
+
 function getReasonFromNote(card,note,rank){
+    let rankingStyle=document.getElementById("rankingStyle").value;
+
     if(!note){
         return getFallbackReason(card,rank);
     }
 
     let n=tidyNote(note);
     let lower=n.charAt(0).toLowerCase()+n.slice(1);
-    let rankingStyle=document.getElementById("rankingStyle").value;
 
-    let templates={
+    let universal=[
+        {id:"u1",text:`The first thing that stands out is ${lower}.`},
+        {id:"u2",text:`What makes this one work for me is ${lower}.`},
+        {id:"u3",text:`I keep coming back to this card because ${lower}.`},
+        {id:"u4",text:`This one deserves a spot because ${lower}.`},
+        {id:"u5",text:`There is just something about it — ${lower}.`},
+        {id:"u6",text:`This feels like the kind of card people notice straight away because ${lower}.`},
+        {id:"u7",text:`The more I look at it, the more I appreciate it, especially because ${lower}.`},
+        {id:"u8",text:`This is exactly the type of card that works well in a Top 5, because ${lower}.`}
+    ];
+
+    let styleTemplates={
         manual:[
-            `${card} earns this spot because ${lower}.`,
-            `For me, ${card} stands out because ${lower}.`,
-            `${card} had to make the list. ${n}.`,
-            `The reason I placed ${card} here is simple: ${lower}.`,
-            `${card} might not be everyone's pick, but ${lower}.`
+            {id:"m1",text:`${card} earns this spot because ${lower}.`},
+            {id:"m2",text:`For me, ${card} stands out because ${lower}.`},
+            {id:"m3",text:`I had to include ${card}. ${n}.`},
+            {id:"m4",text:`The reason ${card} made the list is simple: ${lower}.`},
+            {id:"m5",text:`${card} might not be everyone's pick, but ${lower}.`}
         ],
         artwork:[
-            `Visually, ${card} is hard to ignore because ${lower}.`,
-            `The artwork on ${card} works so well because ${lower}.`,
-            `${card} feels like a proper binder card. ${n}.`,
-            `This is exactly the sort of art style I love: ${lower}.`,
-            `${card} gets the spot because the artwork has instant impact: ${lower}.`
+            {id:"a1",text:`The artwork on ${card} does a lot of heavy lifting here. ${n}.`},
+            {id:"a2",text:`Visually, ${card} is hard to ignore because ${lower}.`},
+            {id:"a3",text:`This is the kind of artwork that makes a card feel special, especially because ${lower}.`},
+            {id:"a4",text:`As a binder card, ${card} absolutely works. ${n}.`},
+            {id:"a5",text:`The colours, pose, and overall feel stand out because ${lower}.`}
         ],
         underrated:[
-            `${card} feels seriously overlooked, especially because ${lower}.`,
-            `I do not see enough people talking about ${card}. ${n}.`,
-            `${card} has sleeper energy written all over it because ${lower}.`,
-            `This is one people might appreciate more later, because ${lower}.`,
-            `${card} deserves more attention than it gets. ${n}.`
+            {id:"un1",text:`I do not see enough people talking about ${card}. ${n}.`},
+            {id:"un2",text:`This feels like a proper sleeper pick because ${lower}.`},
+            {id:"un3",text:`${card} is easy to overlook, but that is exactly why I like it. ${n}.`},
+            {id:"un4",text:`This could age better than people expect because ${lower}.`},
+            {id:"un5",text:`For an underrated pick, ${card} makes a lot of sense because ${lower}.`}
         ],
         value:[
-            `${card} is one I would keep an eye on, mainly because ${lower}.`,
-            `I am not saying it is guaranteed, but ${card} has potential because ${lower}.`,
-            `${card} could age well if collectors catch on because ${lower}.`,
-            `This is the type of card that can quietly build demand, especially because ${lower}.`,
-            `${card} feels like a watchlist card to me. ${n}.`
+            {id:"v1",text:`I would keep an eye on ${card}, mainly because ${lower}.`},
+            {id:"v2",text:`I am not saying it is guaranteed, but ${card} has potential because ${lower}.`},
+            {id:"v3",text:`This feels like the sort of card that could quietly build demand. ${n}.`},
+            {id:"v4",text:`If collectors catch on, ${card} could become interesting because ${lower}.`},
+            {id:"v5",text:`For me, ${card} belongs on the watchlist because ${lower}.`}
         ],
         cute:[
-            `${card} gets this spot because it has pure charm: ${lower}.`,
-            `This one instantly made me smile. ${n}.`,
-            `${card} has that wholesome Pokémon energy, especially because ${lower}.`,
-            `Cute cards work best when they feel genuine, and ${card} does exactly that because ${lower}.`,
-            `${card} is the kind of card casual fans connect with straight away. ${n}.`
+            {id:"c1",text:`${card} has that instant charm factor because ${lower}.`},
+            {id:"c2",text:`This one just makes me smile. ${n}.`},
+            {id:"c3",text:`For a cute card, ${card} absolutely nails it because ${lower}.`},
+            {id:"c4",text:`This has the wholesome Pokémon energy people love. ${n}.`},
+            {id:"c5",text:`Casual fans would understand this pick straight away because ${lower}.`}
         ],
         iconic:[
-            `${card} feels instantly recognisable because ${lower}.`,
-            `This is the kind of card people remember. ${n}.`,
-            `${card} has that iconic feel because ${lower}.`,
-            `Some cards just have presence, and ${card} is one of them because ${lower}.`,
-            `${card} belongs in the conversation because ${lower}.`
+            {id:"i1",text:`${card} feels instantly recognisable because ${lower}.`},
+            {id:"i2",text:`This has the kind of presence that makes a card memorable. ${n}.`},
+            {id:"i3",text:`Some cards just feel important, and ${card} has that because ${lower}.`},
+            {id:"i4",text:`This is the kind of card people remember after seeing it once. ${n}.`},
+            {id:"i5",text:`${card} belongs in the conversation because ${lower}.`}
         ],
         story:[
-            `${card} feels like a scene from a bigger story because ${lower}.`,
-            `This card makes you wonder what happened before and after. ${n}.`,
-            `${card} does more than show a Pokémon because ${lower}.`,
-            `The storytelling here is what sells it for me: ${lower}.`,
-            `${card} feels like a tiny moment frozen in time. ${n}.`
+            {id:"s1",text:`${card} feels like a moment from a bigger story because ${lower}.`},
+            {id:"s2",text:`This card makes you wonder what happened before and after. ${n}.`},
+            {id:"s3",text:`The storytelling here is what sells it for me: ${lower}.`},
+            {id:"s4",text:`This feels less like a still image and more like a scene. ${n}.`},
+            {id:"s5",text:`${card} has atmosphere, personality, and a real sense of moment because ${lower}.`}
         ]
     };
 
-    let list=templates[rankingStyle] || templates.manual;
-    return list[(rank + n.length + card.length) % list.length];
+    let list=(styleTemplates[rankingStyle] || styleTemplates.manual).concat(universal);
+    return pickUniqueTemplate(list);
 }
 
 function getFallbackReason(card,rank){
@@ -489,44 +516,58 @@ function getFallbackReason(card,rank){
 
     let fallbacks={
         manual:[
-            `${card} stands out immediately and deserves a place in the Top 5.`,
-            `${card} has enough personality to make the list.`,
-            `${card} is one of those picks that just feels right here.`
+            {id:"fm1",text:`${card} stands out immediately and deserves a place in the Top 5.`},
+            {id:"fm2",text:`${card} has enough personality to make the list.`},
+            {id:"fm3",text:`${card} is one of those picks that just feels right here.`},
+            {id:"fm4",text:`This is a strong pick because it has instant visual appeal.`},
+            {id:"fm5",text:`This one brings something different to the list.`}
         ],
         artwork:[
-            `${card} has a strong visual style that makes it pop on screen.`,
-            `${card} looks great as a display piece, which is exactly what I want from this list.`,
-            `${card} has the kind of artwork that makes you stop scrolling.`
+            {id:"fa1",text:`${card} has a strong visual style that makes it pop on screen.`},
+            {id:"fa2",text:`${card} looks great as a display piece, which is exactly what I want from this list.`},
+            {id:"fa3",text:`${card} has the kind of artwork that makes you stop scrolling.`},
+            {id:"fa4",text:`The artwork here gives this card a real identity.`},
+            {id:"fa5",text:`This one works because the visual impact is immediate.`}
         ],
         underrated:[
-            `${card} feels like a card people are not giving enough credit to.`,
-            `${card} is a proper hidden gem in this lineup.`,
-            `${card} deserves more attention than it currently gets.`
+            {id:"fu1",text:`${card} feels like a card people are not giving enough credit to.`},
+            {id:"fu2",text:`${card} is a proper hidden gem in this lineup.`},
+            {id:"fu3",text:`${card} deserves more attention than it currently gets.`},
+            {id:"fu4",text:`This feels like one of those cards people might appreciate later.`},
+            {id:"fu5",text:`This is exactly the sort of pick that gets slept on.`}
         ],
         value:[
-            `${card} has the kind of collector appeal that could build over time.`,
-            `${card} is one I would personally keep on the watchlist.`,
-            `${card} has sleeper potential if demand starts moving.`
+            {id:"fv1",text:`${card} has the kind of collector appeal that could build over time.`},
+            {id:"fv2",text:`${card} is one I would personally keep on the watchlist.`},
+            {id:"fv3",text:`${card} has sleeper potential if demand starts moving.`},
+            {id:"fv4",text:`This feels like a card worth paying attention to.`},
+            {id:"fv5",text:`If the set gets more attention, this could be one people come back for.`}
         ],
         cute:[
-            `${card} brings pure feel-good energy to the list.`,
-            `${card} is simple, charming, and really easy to love.`,
-            `${card} has exactly the kind of cute appeal that works for Pokémon fans.`
+            {id:"fc1",text:`${card} brings pure feel-good energy to the list.`},
+            {id:"fc2",text:`${card} is simple, charming, and really easy to love.`},
+            {id:"fc3",text:`${card} has exactly the kind of cute appeal that works for Pokémon fans.`},
+            {id:"fc4",text:`This is the kind of card that instantly makes people smile.`},
+            {id:"fc5",text:`This one has that wholesome Pokémon energy.`}
         ],
         iconic:[
-            `${card} has the kind of presence that makes it memorable.`,
-            `${card} feels like one people will recognise straight away.`,
-            `${card} has that standout factor that makes it feel important.`
+            {id:"fi1",text:`${card} has the kind of presence that makes it memorable.`},
+            {id:"fi2",text:`${card} feels like one people will recognise straight away.`},
+            {id:"fi3",text:`${card} has that standout factor that makes it feel important.`},
+            {id:"fi4",text:`This is one of those cards that feels instantly recognisable.`},
+            {id:"fi5",text:`This pick makes sense because it has real character appeal.`}
         ],
         story:[
-            `${card} feels like a small scene rather than just a card image.`,
-            `${card} has personality, atmosphere, and a proper sense of moment.`,
-            `${card} makes the artwork feel like it has a story behind it.`
+            {id:"fs1",text:`${card} feels like a small scene rather than just a card image.`},
+            {id:"fs2",text:`${card} has personality, atmosphere, and a proper sense of moment.`},
+            {id:"fs3",text:`${card} makes the artwork feel like it has a story behind it.`},
+            {id:"fs4",text:`This feels like a little moment frozen in time.`},
+            {id:"fs5",text:`This card works because it feels like more than just a pose.`}
         ]
     };
 
     let list=fallbacks[rankingStyle] || fallbacks.manual;
-    return list[rank % list.length];
+    return pickUniqueTemplate(list);
 }
 
 function getTopLine(){
@@ -575,6 +616,7 @@ function getEnding(){
 }
 
 function generateScript(){
+    usedScriptTemplates=[];
     let cards=getCards();
     let notes=getNotes();
 
