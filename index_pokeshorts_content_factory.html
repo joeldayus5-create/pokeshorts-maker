@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>PokéShorts Maker</title>
+<style>
+body{font-family:Arial,sans-serif;padding:20px;background:#111;color:white}
+input,select{width:100%;padding:10px;font-size:18px;margin-bottom:10px;border-radius:8px;border:none;box-sizing:border-box}
+button{width:100%;padding:12px;font-size:18px;border:none;border-radius:8px;cursor:pointer;margin-top:10px}
+#output,#storyboard,#videoSection,#exportSection,#ideasSection,#hashtagsSection,#captionsSection{margin-top:20px;padding:15px;background:#222;border-radius:10px}
+pre{white-space:pre-wrap;line-height:1.6;font-family:Arial,sans-serif}
+.imageBox{margin-top:15px;padding:10px;background:#1a1a1a;border-radius:10px}
+.preview{width:100%;max-height:300px;object-fit:contain;margin-top:10px;border-radius:8px;background:#000}
+.scene{margin-bottom:15px;padding:10px;background:#333;border-radius:8px}
+#videoFrame{width:100%;max-width:360px;aspect-ratio:9/16;background:#000;margin:20px auto;border-radius:18px;overflow:hidden;position:relative;box-shadow:0 0 20px rgba(0,0,0,.6)}
+#videoImage{width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;transform:scale(1)}
+.zoom{animation:slowZoom 5s linear forwards}
+@keyframes slowZoom{from{transform:scale(1)}to{transform:scale(1.14)}}
+#videoText{position:absolute;bottom:40px;left:15px;right:15px;text-align:center;font-size:26px;font-weight:bold;color:white;text-shadow:3px 3px 6px black;background:rgba(0,0,0,.55);padding:10px;border-radius:10px}
+#videoTimer,#exportStatus{text-align:center;font-size:14px;color:#ccc;margin-top:10px}
+a.downloadLink{display:block;margin-top:15px;padding:12px;border-radius:8px;background:white;color:black;text-align:center;text-decoration:none;font-weight:bold}
+.small{font-size:14px;color:#ccc;line-height:1.5}
+.copyBox{margin-top:10px;padding:12px;background:#333;border-radius:8px;white-space:pre-wrap;line-height:1.5}
+.pill{display:inline-block;background:#333;padding:8px 10px;border-radius:20px;margin:4px;font-size:14px}
+.idea{margin-bottom:10px;padding:10px;background:#333;border-radius:8px}
+</style>
+</head>
+<body>
+
+<h1>PokéShorts Maker</h1>
+
+<select id="videoType">
+<option value="future">Future Set Top 5</option>
+<option value="artworks">Favourite Artworks</option>
+<option value="cute">Cute Cards</option>
+<option value="connected">Connected Artworks</option>
+<option value="underrated">Underrated Cards</option>
+<option value="regret">Cards I Regret Not Buying</option>
+<option value="explode">Cards That Could Explode</option>
+<option value="bestset">Best Card In Every Set</option>
+<option value="darkest">Darkest Cards</option>
+<option value="happiest">Happiest Cards</option>
+<option value="saddest">Saddest Cards</option>
+<option value="stories">Pokémon Card Stories</option>
+<option value="facts">Craziest Pokémon Card Facts</option>
+</select>
+
+<select id="mode">
+<option value="hype">Hype Mode</option>
+<option value="collector">Collector Mode</option>
+<option value="investor">Investor Mode</option>
+<option value="news">News Mode</option>
+</select>
+
+<input id="setName" placeholder="Set name / theme">
+<input id="card1" placeholder="Card #1">
+<input id="card2" placeholder="Card #2">
+<input id="card3" placeholder="Card #3">
+<input id="card4" placeholder="Card #4">
+<input id="card5" placeholder="Card #5">
+
+<div class="imageBox"><strong>Image for Card #1</strong><input type="file" accept="image/*" onchange="previewImage(event,'preview1')"><img id="preview1" class="preview"></div>
+<div class="imageBox"><strong>Image for Card #2</strong><input type="file" accept="image/*" onchange="previewImage(event,'preview2')"><img id="preview2" class="preview"></div>
+<div class="imageBox"><strong>Image for Card #3</strong><input type="file" accept="image/*" onchange="previewImage(event,'preview3')"><img id="preview3" class="preview"></div>
+<div class="imageBox"><strong>Image for Card #4</strong><input type="file" accept="image/*" onchange="previewImage(event,'preview4')"><img id="preview4" class="preview"></div>
+<div class="imageBox"><strong>Image for Card #5</strong><input type="file" accept="image/*" onchange="previewImage(event,'preview5')"><img id="preview5" class="preview"></div>
+
+<button onclick="generateScript()">Generate 30 Second Script</button>
+<button onclick="copyScript()">Copy Full Script</button>
+<button onclick="copyTikTokVoiceScript()">Copy TikTok Voice Script</button>
+<button onclick="generateStoryboard()">Generate Storyboard</button>
+<button onclick="playVideoPreview()">Generate Video Preview</button>
+<button onclick="generateCaptions()">Generate On-Screen Captions</button>
+<button onclick="generateHashtags()">Generate Hashtags</button>
+<button onclick="generateVideoIdeas()">Generate 30 Video Ideas</button>
+
+<div id="captionsSection">
+<h2>On-Screen Captions</h2>
+<p class="small">Use these as text overlays in TikTok or CapCut.</p>
+<div id="captionsOutput" class="copyBox">No captions generated yet.</div>
+<button onclick="copyCaptions()">Copy Captions</button>
+</div>
+
+<div id="hashtagsSection">
+<h2>Hashtags & Post Caption</h2>
+<div id="postCaptionOutput" class="copyBox">No post caption generated yet.</div>
+<div id="hashtagsOutput" class="copyBox">No hashtags generated yet.</div>
+<button onclick="copyPostCaption()">Copy Post Caption</button>
+<button onclick="copyHashtags()">Copy Hashtags</button>
+</div>
+
+<div id="ideasSection">
+<h2>Content Ideas</h2>
+<p class="small">Generate repeatable Pokémon TikTok ideas when you do not know what to post next.</p>
+<div id="ideasOutput">No ideas generated yet.</div>
+<button onclick="copyIdeas()">Copy Ideas</button>
+</div>
+
+<div id="exportSection">
+<h2>Export Video</h2>
+<p class="small">Step 1: Create WebM video. Step 2: try experimental MP4 conversion. MP4 conversion uses FFmpeg WebAssembly and may take a while on mobile.</p>
+<button onclick="exportVideo()">Create WebM Video</button>
+<button onclick="convertLastVideoToMp4()">Convert Last Video to MP4 (Experimental)</button>
+<div id="exportStatus">Not exported yet</div>
+<div id="downloadArea"></div>
+</div>
+
+<div id="videoSection">
+<h2>Video Preview</h2>
+<div id="videoFrame"><img id="videoImage"><div id="videoText">Your preview will appear here</div></div>
+<div id="videoTimer">Not playing</div>
+</div>
+
+<div id="output"></div>
+<div id="storyboard"></div>
+
+<script>
+let latestScript="",latestTikTokScript="",latestCaptions="",latestHashtags="",latestPostCaption="",latestIdeas="",previewTimeouts=[];
+
+function randomItem(list){return list[Math.floor(Math.random()*list.length)]}
+function clearPreviewTimers(){previewTimeouts.forEach(t=>clearTimeout(t));previewTimeouts=[]}
+function previewImage(event,previewId){let file=event.target.files[0];if(file){let reader=new FileReader();reader.onload=e=>document.getElementById(previewId).src=e.target.result;reader.readAsDataURL(file)}}
+function getCards(){return[
+document.getElementById("card1").value||"Card 1",
+document.getElementById("card2").value||"Card 2",
+document.getElementById("card3").value||"Card 3",
+document.getElementById("card4").value||"Card 4",
+document.getElementById("card5").value||"Card 5"]}
+function getImages(){return[
+document.getElementById("preview1").src,
+document.getElementById("preview2").src,
+document.getElementById("preview3").src,
+document.getElementById("preview4").src,
+document.getElementById("preview5").src]}
+
+function base(card,top,endings,hooks){return{hooks,card,top,endings}}
+
+function getVibe(videoType,setName){
+let themes={
+future:base(
+["This could be a major chase thanks to the artwork and collector appeal.","This is one collectors should keep on their radar.","This has the kind of hype that could build fast."],
+["This feels like the card that could define the whole release.","This is the one I would personally watch closest.","This feels like the headline chase of the set."],
+[`Are you buying ${setName}, or skipping it?`,"Did I get this Top 5 right?","Which card would you put at number one?"],
+[`Top 5 cards I would watch in ${setName}.`,`Opening ${setName}? These are the five cards to know.`,`Before you buy ${setName}, watch these five cards.`]),
+artworks:base(
+["The artwork is stunning, and the whole scene makes this card memorable.","This is the kind of card that looks incredible in a binder.","The colours and composition make this one stand out instantly."],
+["For me, this is artwork perfection.","This is the one I could stare at forever.","This is easily my favourite artwork on the list."],
+["What artwork would you add to this list?","I could definitely make a part two of this.","Tell me your favourite Pokémon card artwork."],
+["Five Pokémon card artworks I still think about.","Forget value. These are five artworks I love.","Some Pokémon cards are just beautiful. Here are five favourites."]),
+cute:base(
+["This card is pure happiness and instantly makes you smile.","The artwork makes this Pokémon look absolutely adorable.","This has that wholesome energy collectors love."],
+["This is the cutest card on the list for me.","Nothing beats this one for pure cuteness.","This card is basically impossible not to love."],
+["Which cute card did I miss?","Should I make a part two?","Tell me your cutest Pokémon card pick."],
+["These are five of the cutest Pokémon cards ever.","If you like wholesome cards, this list is for you.","These Pokémon cards are dangerously cute."]),
+connected:base(
+["This works even better when you see it next to the matching card.","The linked artwork makes this card way more special.","This is storytelling through card art, and I love it."],
+["This is my favourite connected artwork on the list.","This feels like a full scene split across cards.","This is the best linked artwork pick for me."],
+["Do you know any other connected artworks?","This is why I love Pokémon card art.","I need to make a part two of these."],
+["These Pokémon cards have artwork that connects together.","I love when cards secretly link into one bigger picture.","Connected artworks are one of the coolest parts of the TCG."]),
+underrated:base(
+["This is way better than people give it credit for.","I barely see anyone talking about this one.","This feels like a hidden gem collectors are missing."],
+["This is the most underrated card on the list.","I genuinely think people are sleeping on this one.","This card deserves way more attention."],
+["Which underrated card would you add?","Am I right, or am I overrating these?","Tell me your favourite hidden gem."],
+["Five Pokémon cards I think are seriously underrated.","Nobody talks about these cards enough.","These cards deserve way more attention."]),
+regret:base(
+["This used to be much easier to pick up, and I underestimated it.","Looking back, this was such an obvious buy.","This is exactly the kind of card you regret ignoring."],
+["This is my biggest regret from the list.","This is the one that hurts the most.","I should have bought this when I had the chance."],
+["What card do you regret not buying?","This is your sign to trust your gut next time.","Tell me your biggest Pokémon card regret."],
+["Five Pokémon cards I regret not buying sooner.","I had the chance to buy these cards, and I fumbled it.","These cards hurt to look at now."]),
+explode:base(
+["This has the kind of appeal that can build over time.","If demand picks up, this could be one to watch.","This has serious sleeper potential."],
+["This is the card I would watch the closest.","If one card takes off, I think it is this.","This could be the biggest mover on the list."],
+["Would you buy any of these?","Which card has the most potential?","Save this and come back later."],
+["Five Pokémon cards I think could explode in popularity.","These cards might not stay under the radar for long.","If collectors catch on, these cards could move fast."]),
+bestset:base(
+["For this set, this is the card that stands out most.","This feels like the card people remember from that set.","This card captures why that release was exciting."],
+["This is the strongest set pick for me.","This card represents why that set is loved.","This is the best card on the whole list."],
+["Which set should I do next?","Do you agree with these picks?","Tell me which set had the best chase card."],
+["The best card from five different Pokémon sets.","Every set has one card that stands above the rest.","Here are five sets, and the best card from each one."]),
+darkest:base(
+["The atmosphere on this card is genuinely unsettling.","This has such a creepy vibe for a Pokémon card.","This artwork is not easy to forget."],
+["This is the darkest card on the list for me.","This one genuinely feels disturbing.","This has the strongest creepy atmosphere."],
+["What is the creepiest Pokémon card you know?","Should I make a darker part two?","Pokémon card art gets way darker than people think."],
+["Five of the darkest Pokémon cards I have seen.","Pokémon cards are not always cute. Some are creepy.","These cards prove Pokémon artwork can get dark."]),
+happiest:base(
+["This card just feels warm, cheerful, and wholesome.","The artwork is full of joy and good energy.","This is the kind of card that makes collecting feel fun."],
+["This is the happiest card on the list for me.","This card is pure joy.","Nothing beats this one for wholesome energy."],
+["Which card makes you happiest?","I need more wholesome cards like this.","Tell me your favourite good-vibes card."],
+["Five of the happiest Pokémon cards ever.","Some Pokémon cards just make you feel good.","These cards are pure good vibes."]),
+saddest:base(
+["There is something really emotional about this artwork.","This card tells a sad little story.","This one hits harder the longer you look at it."],
+["This is the saddest card on the list for me.","This one genuinely feels emotional.","This card tells the strongest story."],
+["Which card makes you emotional?","Did I miss an obvious sad card?","Pokémon art can be deeper than people think."],
+["Five Pokémon cards that are actually kind of sad.","Some cards hit way harder than expected.","These cards prove Pokémon artwork can be emotional."]),
+stories:base(
+["This feels like one moment from a bigger story.","The scene makes you wonder what happened before and after.","This card has so much personality in one image."],
+["This is the best story card on the list for me.","This feels like a whole scene in a single card.","This is Pokémon storytelling at its best."],
+["Which card tells the best story?","I love when card art does this.","Should I make a series on story cards?"],
+["Five Pokémon cards that tell a story.","Some cards are not just artwork. They are tiny stories.","These cards have amazing visual storytelling."]),
+facts:base(
+["This card has a really interesting history behind it.","A lot of collectors do not know this detail.","This fact makes the card even cooler."],
+["This is the craziest fact on the list for me.","This is the one that surprised me most.","This fact completely changes how I see the card."],
+["How many of these did you know?","Should I make a part two?","Tell me a Pokémon card fact I missed."],
+["Five crazy Pokémon card facts you might not know.","These Pokémon card facts are actually wild.","If you collect Pokémon cards, you need to know these facts."])
+};
+return themes[videoType]||themes.artworks;
+}
+
+function getCaptionTheme(videoType,setName){
+let map={
+future:`TOP 5 ${setName.toUpperCase()} CARDS`,
+artworks:"TOP 5 FAVOURITE ARTWORKS",
+cute:"TOP 5 CUTEST CARDS",
+connected:"TOP 5 CONNECTED ARTWORKS",
+underrated:"TOP 5 UNDERRATED CARDS",
+regret:"TOP 5 CARDS I REGRET",
+explode:"TOP 5 CARDS THAT COULD EXPLODE",
+bestset:"BEST CARD FROM EACH SET",
+darkest:"TOP 5 DARKEST CARDS",
+happiest:"TOP 5 HAPPIEST CARDS",
+saddest:"TOP 5 SADDEST CARDS",
+stories:"TOP 5 STORY CARDS",
+facts:"TOP 5 CRAZY CARD FACTS"
+};
+return map[videoType]||`TOP 5 ${setName.toUpperCase()} CARDS`;
+}
+
+function generateTopFiveScript(title,cards,vibe){
+let parts=[
+title,
+`At number five, ${cards[4]}. ${randomItem(vibe.card)}`,
+`At number four, ${cards[3]}. ${randomItem(vibe.card)}`,
+`At number three, ${cards[2]}. ${randomItem(vibe.card)}`,
+`At number two, ${cards[1]}. ${randomItem(vibe.card)}`,
+`And at number one, ${cards[0]}. ${randomItem(vibe.top)}`,
+randomItem(vibe.endings)
+];
+latestTikTokScript=parts.join("\n\n");
+return latestTikTokScript;
+}
+
+function generateScript(){
+let videoType=document.getElementById("videoType").value;
+let setName=document.getElementById("setName").value||"Pokémon cards";
+let cards=getCards();
+let vibe=getVibe(videoType,setName);
+let title=randomItem(vibe.hooks);
+latestScript=generateTopFiveScript(title,cards,vibe);
+document.getElementById("output").innerHTML="<pre>"+latestScript+"</pre>";
+generateCaptions();
+generateHashtags();
+}
+
+function buildScenes(){
+let videoType=document.getElementById("videoType").value;
+let setName=document.getElementById("setName").value||"Pokémon cards",cards=getCards(),images=getImages();
+let theme=getCaptionTheme(videoType,setName);
+return[
+{image:"",text:theme,time:"0:00 - 0:02",duration:2000,type:"hook"},
+{image:images[4],text:"#5 "+cards[4],time:"0:02 - 0:07",duration:5000,type:"card"},
+{image:"",text:"",time:"0:07 - 0:08",duration:1000,type:"pause"},
+{image:images[3],text:"#4 "+cards[3],time:"0:08 - 0:13",duration:5000,type:"card"},
+{image:"",text:"",time:"0:13 - 0:14",duration:1000,type:"pause"},
+{image:images[2],text:"#3 "+cards[2],time:"0:14 - 0:19",duration:5000,type:"card"},
+{image:"",text:"",time:"0:19 - 0:20",duration:1000,type:"pause"},
+{image:images[1],text:"#2 "+cards[1],time:"0:20 - 0:25",duration:5000,type:"card"},
+{image:"",text:"",time:"0:25 - 0:26",duration:1000,type:"pause"},
+{image:images[0],text:"#1 "+cards[0],time:"0:26 - 0:31",duration:5000,type:"card"},
+{image:"",text:"DID I GET THIS RIGHT?",time:"0:31 - 0:33",duration:2000,type:"cta"}];
+}
+
+function generateStoryboard(){
+let scenes=buildScenes();
+let html="<h3>33 Second Video Storyboard</h3>";
+scenes.forEach(scene=>{
+if(scene.type==="pause"){html+=`<div class="scene"><strong>${scene.time}</strong><br>1 second pause / transition</div>`}
+else{html+=`<div class="scene"><strong>${scene.time}</strong><br>${scene.type.toUpperCase()}<br>Text: "${scene.text}"</div>`}
+});
+document.getElementById("storyboard").innerHTML=html;
+}
+
+function playVideoPreview(){
+clearPreviewTimers();
+let scenes=buildScenes(),videoImage=document.getElementById("videoImage"),videoText=document.getElementById("videoText"),timer=document.getElementById("videoTimer");
+let delay=0;
+scenes.forEach(scene=>{let id=setTimeout(()=>{
+videoImage.classList.remove("zoom");void videoImage.offsetWidth;
+if(scene.image){videoImage.src=scene.image;videoImage.style.display="block";videoImage.classList.add("zoom")}
+else{videoImage.removeAttribute("src");videoImage.style.display="none"}
+videoText.textContent=scene.text;
+videoText.style.display=scene.text ? "block" : "none";
+timer.textContent=scene.time;
+},delay);previewTimeouts.push(id);delay+=scene.duration});
+previewTimeouts.push(setTimeout(()=>timer.textContent="Preview finished",delay));
+}
+
+function drawWrappedText(ctx,text,x,y,maxWidth,lineHeight){
+if(!text)return;
+let words=text.split(" "),line="",lines=[];
+for(let n=0;n<words.length;n++){
+let testLine=line+words[n]+" ";
+if(ctx.measureText(testLine).width>maxWidth&&n>0){lines.push(line.trim());line=words[n]+" "}else{line=testLine}
+}
+lines.push(line.trim());
+let boxHeight=lines.length*lineHeight+40;
+ctx.fillStyle="rgba(0,0,0,0.58)";
+roundRect(ctx,60,y-40,maxWidth+40,boxHeight,22,true,false);
+ctx.fillStyle="white";ctx.textAlign="center";
+lines.forEach((l,i)=>ctx.fillText(l,x,y+i*lineHeight));
+}
+
+function roundRect(ctx,x,y,w,h,r,fill,stroke){
+if(w<2*r)r=w/2;if(h<2*r)r=h/2;
+ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();
+if(fill)ctx.fill();if(stroke)ctx.stroke();
+}
+
+function loadImage(src){
+return new Promise(resolve=>{
+if(!src){resolve(null);return}
+let img=new Image();img.onload=()=>resolve(img);img.onerror=()=>resolve(null);img.src=src;
+});
+}
+
+async function exportVideo(){
+document.getElementById("exportStatus").textContent="Preparing 33 second video...";
+document.getElementById("downloadArea").innerHTML="";
+let scenes=buildScenes();
+let canvas=document.createElement("canvas");canvas.width=1080;canvas.height=1920;
+let ctx=canvas.getContext("2d"),stream=canvas.captureStream(30),chunks=[],recorder;
+try{recorder=new MediaRecorder(stream,{mimeType:"video/webm;codecs=vp9"})}catch(e){recorder=new MediaRecorder(stream,{mimeType:"video/webm"})}
+recorder.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data)};
+recorder.onstop=()=>{
+let blob=new Blob(chunks,{type:"video/webm"}); window.lastWebmBlob = blob; let url=URL.createObjectURL(blob);
+let a=document.createElement("a");a.href=url;a.download="pokeshorts-33-second-video.webm";a.className="downloadLink";a.textContent="Download WebM video";
+document.getElementById("downloadArea").appendChild(a);
+document.getElementById("exportStatus").textContent="Video ready. Tap the download button.";
+};
+recorder.start();
+
+for(let scene of scenes){
+let img=await loadImage(scene.image);
+let frames=Math.round(scene.duration/1000*30);
+for(let f=0;f<frames;f++){
+let progress=f/frames;
+ctx.fillStyle="#000";ctx.fillRect(0,0,1080,1920);
+let grad=ctx.createLinearGradient(0,0,0,1920);grad.addColorStop(0,"#151515");grad.addColorStop(1,"#000");ctx.fillStyle=grad;ctx.fillRect(0,0,1080,1920);
+if(img){
+let scale=1+progress*0.12;
+let ratio=Math.min((1080*.82)/img.width,(1920*.68)/img.height)*scale;
+let w=img.width*ratio,h=img.height*ratio;
+ctx.drawImage(img,(1080-w)/2,(1920-h)/2-80,w,h);
+}
+ctx.font="bold 76px Arial";ctx.textBaseline="top";
+drawWrappedText(ctx,scene.text.toUpperCase(),540,1490,900,88);
+ctx.font="32px Arial";ctx.fillStyle="rgba(255,255,255,0.75)";ctx.textAlign="center";ctx.fillText(scene.time,540,60);
+await new Promise(r=>setTimeout(r,1000/30));
+}
+}
+recorder.stop();
+}
+
+
+function generateCaptions(){
+let videoType=document.getElementById("videoType").value;
+let setName=document.getElementById("setName").value||"Pokémon cards";
+let cards=getCards();
+let theme=getCaptionTheme(videoType,setName);
+
+let punchLines={
+future:["CHASE POTENTIAL","ONE TO WATCH","COULD BE HUGE","SLEEPER PICK","HEADLINE CARD"],
+artworks:["INSANE ARTWORK","BINDER-WORTHY","BEAUTIFUL CARD","STUNNING SCENE","ARTWORK PERFECTION"],
+cute:["PURE HAPPINESS","TOO CUTE","WHOLESOME PICK","INSTANT SMILE","CUTEST CARD"],
+connected:["LINKED ARTWORK","BIGGER PICTURE","HIDDEN CONNECTION","STORY CARD","MATCHING ART"],
+underrated:["SLEEPER CARD","HIDDEN GEM","OVERLOOKED PICK","UNDERRATED","DESERVES HYPE"],
+regret:["I FUMBLED THIS","SHOULD HAVE BOUGHT","BIG REGRET","MISSED OUT","PAINFUL CARD"],
+explode:["COULD EXPLODE","WATCH THIS CARD","SLEEPER POTENTIAL","DON'T IGNORE","COULD MOVE FAST"],
+bestset:["BEST FROM SET","STANDOUT CARD","SET DEFINING","TOP PICK","BEST CHASE"],
+darkest:["CREEPY ART","DARK ENERGY","UNSETTLING CARD","SCARY VIBE","NOT CUTE"],
+happiest:["GOOD VIBES","PURE JOY","WHOLESOME CARD","HAPPY ART","FEEL-GOOD PICK"],
+saddest:["EMOTIONAL CARD","SAD STORY","HITS HARD","DEEP ARTWORK","HEARTBREAKING"],
+stories:["TELLS A STORY","LOOK CLOSER","TINY STORY","VISUAL STORY","FULL SCENE"],
+facts:["CRAZY FACT","DID YOU KNOW?","HIDDEN HISTORY","WILD DETAIL","CARD FACT"]
+};
+
+let lines=punchLines[videoType]||punchLines.future;
+
+latestCaptions =
+`${theme}
+
+#5 ${cards[4]}
+${lines[0]}
+
+#4 ${cards[3]}
+${lines[1]}
+
+#3 ${cards[2]}
+${lines[2]}
+
+#2 ${cards[1]}
+${lines[3]}
+
+#1 ${cards[0]}
+${lines[4]}
+
+DID I GET THIS RIGHT?`;
+
+document.getElementById("captionsOutput").textContent=latestCaptions;
+}
+
+function generateHashtags(){
+let videoType=document.getElementById("videoType").value;
+let setName=document.getElementById("setName").value||"pokemon";
+let cleanSet=setName.toLowerCase().replace(/[^a-z0-9]/g,"");
+
+let topicTags={
+future:["#pokemoninvesting","#pokemontcgnews","#pokemoncards"],
+artworks:["#pokemonart","#pokemonartwork","#tcgart"],
+cute:["#cutepokemon","#wholesomepokemon","#pokemoncommunity"],
+connected:["#pokemonartwork","#connectedart","#tcgcollector"],
+underrated:["#underratedpokemon","#hiddengem","#pokemoncollector"],
+regret:["#pokemonregret","#cardcollector","#pokemoninvesting"],
+explode:["#pokemoninvesting","#sleepercard","#pokemonmarket"],
+bestset:["#pokemonsets","#bestpokemoncards","#tcgcollector"],
+darkest:["#creepypokemon","#darkpokemon","#pokemonlore"],
+happiest:["#wholesomepokemon","#happypokemon","#pokemoncommunity"],
+saddest:["#pokemonlore","#sadpokemon","#pokemonstory"],
+stories:["#pokemonstory","#pokemonlore","#tcgart"],
+facts:["#pokemonfacts","#didyouknow","#pokemonhistory"]
+};
+
+let tags=["#pokemon","#pokemontcg","#pokemoncards","#tcg","#cardcollector","#pokemoncommunity"];
+if(cleanSet){tags.push("#"+cleanSet);}
+tags=tags.concat(topicTags[videoType]||[]);
+
+latestHashtags=[...new Set(tags)].join(" ");
+
+let cards=getCards();
+latestPostCaption=`My Top 5 picks for ${setName}. Number 1 has to be ${cards[0]} for me. Which card would you change?`;
+
+document.getElementById("postCaptionOutput").textContent=latestPostCaption;
+document.getElementById("hashtagsOutput").textContent=latestHashtags;
+}
+
+function generateVideoIdeas(){
+let ideas=[
+"Top 5 cutest Pokémon cards ever",
+"Top 5 darkest Pokémon card artworks",
+"Top 5 saddest Pokémon cards",
+"Top 5 happiest Pokémon cards",
+"Top 5 cards with connected artwork",
+"Top 5 cards that tell a story",
+"Top 5 underrated modern Pokémon cards",
+"Top 5 cards I regret not buying",
+"Top 5 cards that could explode in popularity",
+"Top 5 best artworks from older sets",
+"Top 5 cards that look better in Japanese",
+"Top 5 cards under £10",
+"Top 5 Pikachu artworks",
+"Top 5 Eeveelution cards",
+"Top 5 Charizard cards that are not obvious picks",
+"Top 5 Gengar artworks",
+"Top 5 cards with hidden details",
+"Top 5 cards casual fans would love",
+"Top 5 cards collectors are sleeping on",
+"Top 5 cards from Scarlet and Violet era",
+"Top 5 Sword and Shield era artworks",
+"Top 5 cards I would grade",
+"Top 5 cards I would display",
+"Top 5 cards that feel nostalgic",
+"Top 5 cards that look expensive but are affordable",
+"Top 5 Pokémon card facts people do not know",
+"Top 5 cards with creepy backstories",
+"Top 5 cards that deserve more hype",
+"Top 5 cards I would buy before people notice",
+"Top 5 cards that prove Pokémon art is underrated"
+];
+
+latestIdeas=ideas.map((idea,index)=>(index+1)+". "+idea).join("\\n");
+let html="";
+ideas.forEach((idea,index)=>{html+=`<div class="idea"><strong>${index+1}.</strong> ${idea}</div>`});
+document.getElementById("ideasOutput").innerHTML=html;
+}
+
+function copyCaptions(){if(!latestCaptions)generateCaptions();navigator.clipboard.writeText(latestCaptions);alert("Captions copied!")}
+function copyPostCaption(){if(!latestPostCaption)generateHashtags();navigator.clipboard.writeText(latestPostCaption);alert("Post caption copied!")}
+function copyHashtags(){if(!latestHashtags)generateHashtags();navigator.clipboard.writeText(latestHashtags);alert("Hashtags copied!")}
+function copyIdeas(){if(!latestIdeas)generateVideoIdeas();navigator.clipboard.writeText(latestIdeas);alert("Video ideas copied!")}
+
+function copyScript(){if(!latestScript)generateScript();navigator.clipboard.writeText(latestScript);alert("Full script copied!")}
+function copyTikTokVoiceScript(){if(!latestTikTokScript)generateScript();navigator.clipboard.writeText(latestTikTokScript);alert("TikTok voice script copied!")}
+</script>
+
+<script type="module">
+import { FFmpeg } from "https://unpkg.com/@ffmpeg/ffmpeg@0.12.15/dist/esm/index.js";
+import { fetchFile, toBlobURL } from "https://unpkg.com/@ffmpeg/util@0.12.2/dist/esm/index.js";
+
+let ffmpeg = null;
+let ffmpegLoaded = false;
+
+async function loadFFmpeg(){
+    const status = document.getElementById("exportStatus");
+
+    if(ffmpegLoaded){
+        return;
+    }
+
+    status.textContent = "Loading MP4 converter. This can take a minute on mobile...";
+
+    ffmpeg = new FFmpeg();
+
+    ffmpeg.on("log", function(event){
+        if(event.message){
+            status.textContent = "Converting: " + event.message.slice(0, 80);
+        }
+    });
+
+    const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm";
+
+    await ffmpeg.load({
+        coreURL: await toBlobURL(baseURL + "/ffmpeg-core.js", "text/javascript"),
+        wasmURL: await toBlobURL(baseURL + "/ffmpeg-core.wasm", "application/wasm")
+    });
+
+    ffmpegLoaded = true;
+}
+
+window.convertLastVideoToMp4 = async function(){
+
+    const status = document.getElementById("exportStatus");
+    const downloadArea = document.getElementById("downloadArea");
+
+    try{
+        if(!window.lastWebmBlob){
+            status.textContent = "Create the WebM video first, then convert it to MP4.";
+            return;
+        }
+
+        await loadFFmpeg();
+
+        status.textContent = "Writing WebM into converter...";
+
+        await ffmpeg.writeFile("input.webm", await fetchFile(window.lastWebmBlob));
+
+        status.textContent = "Converting to MP4. Keep Chrome open...";
+
+        await ffmpeg.exec([
+            "-i", "input.webm",
+            "-c:v", "libx264",
+            "-preset", "ultrafast",
+            "-pix_fmt", "yuv420p",
+            "-movflags", "faststart",
+            "-an",
+            "output.mp4"
+        ]);
+
+        status.textContent = "Reading MP4 file...";
+
+        const data = await ffmpeg.readFile("output.mp4");
+        const mp4Blob = new Blob([data.buffer], { type: "video/mp4" });
+        const url = URL.createObjectURL(mp4Blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "pokeshorts-33-second-video.mp4";
+        a.className = "downloadLink";
+        a.textContent = "Download MP4 video";
+
+        downloadArea.appendChild(a);
+
+        status.textContent = "MP4 ready. Tap the MP4 download button.";
+    }catch(error){
+        console.error(error);
+        status.textContent = "MP4 conversion failed. Your phone/browser may not support FFmpeg WASM here.";
+    }
+}
+</script>
+
+</body>
+</html>
