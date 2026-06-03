@@ -179,6 +179,14 @@ button{
 <option value="story">Ranking Style: Best Storytelling</option>
 </select>
 
+<select id="scriptMode">
+<option value="auto">Script Mode: Auto Generate</option>
+<option value="manual">Script Mode: Use My Manual Script</option>
+</select>
+
+<textarea id="manualScript" placeholder="Optional manual script. If you choose Manual Script Mode, this exact text will be used for the TikTok voiceover."></textarea>
+<button onclick="fillManualScriptTemplate()">Fill Manual Script Template</button>
+
 <input id="setName" placeholder="Set name / theme">
 
 <input id="card1" placeholder="Card #1">
@@ -197,6 +205,20 @@ button{
 <textarea id="note5" placeholder="Optional note for Card #5"></textarea>
 
 <button onclick="clearAll()">Clear Everything</button>
+
+<div class="section">
+<h2>Saved Projects</h2>
+<p class="small">Save your current video idea, then load it later for testing or posting.</p>
+<input id="projectName" placeholder="Project name - e.g. Pitch Black Top 5">
+<button onclick="saveProject()">Save Current Project</button>
+<select id="savedProjectsSelect">
+<option value="">No saved project selected</option>
+</select>
+<button onclick="loadProject()">Load Selected Project</button>
+<button onclick="deleteProject()">Delete Selected Project</button>
+<button onclick="refreshProjectList()">Refresh Project List</button>
+<div id="projectStatus" class="copyBox">No project action yet.</div>
+</div>
 
 <div class="imageBox">
 <strong>Image for Card #1</strong>
@@ -276,6 +298,16 @@ button{
 </div>
 
 <div class="section">
+<h2>Export TikTok Package</h2>
+<p class="small">Creates one clean block containing your script, captions, post caption, hashtags, storyboard, and director plan.</p>
+<button onclick="generateTikTokPackage()">Generate TikTok Package</button>
+<div id="packageOutput" class="copyBox">No package generated yet.</div>
+<button onclick="copyTikTokPackage()">Copy TikTok Package</button>
+<button onclick="downloadTikTokPackage()">Download Package as TXT</button>
+<button onclick="shareTikTokPackage()">Share TikTok Package</button>
+</div>
+
+<div class="section">
 <h2>Video Preview</h2>
 <div id="videoFrame">
 <img id="videoImage">
@@ -293,6 +325,7 @@ let latestHashtags="";
 let latestStoryboard="";
 let latestDirectorPlan="";
 let latestIdeas="";
+let latestTikTokPackage="";
 let previewTimeouts=[];
 
 function randomItem(list){
@@ -560,7 +593,41 @@ function getEnding(){
     return randomItem(endings[videoType] || endings.future);
 }
 
+
+function fillManualScriptTemplate(){
+    let cards=getCards();
+    let setName=document.getElementById("setName").value.trim() || "these cards";
+
+    let template=
+`Here are my Top 5 picks for ${setName}.
+
+At number five, ${cards[4]}. [Say exactly why you picked this card.]
+
+At number four, ${cards[3]}. [Say exactly why this one stands out.]
+
+At number three, ${cards[2]}. [Add your honest opinion here.]
+
+At number two, ${cards[1]}. [Explain why this almost made number one.]
+
+And at number one, ${cards[0]}. [Explain why this is your favourite pick.]
+
+Which card would you put at number one?`;
+
+    document.getElementById("manualScript").value=template;
+    document.getElementById("scriptMode").value="manual";
+}
+
 function generateScript(){
+    let mode=document.getElementById("scriptMode").value;
+    let manual=document.getElementById("manualScript").value.trim();
+
+    if(mode==="manual" && manual){
+        latestScript=manual;
+        latestTikTokScript=manual;
+        document.getElementById("scriptOutput").textContent=latestScript;
+        return;
+    }
+
     let cards=getCards();
     let notes=getNotes();
 
@@ -899,8 +966,269 @@ function copyIdeas(){
     copyText(latestIdeas,"Ideas copied!");
 }
 
+
+function getProjectData(){
+    return {
+        savedAt:new Date().toISOString(),
+        videoType:document.getElementById("videoType").value,
+        rankingStyle:document.getElementById("rankingStyle").value,
+        scriptMode:document.getElementById("scriptMode").value,
+        manualScript:document.getElementById("manualScript").value,
+        setName:document.getElementById("setName").value,
+        card1:document.getElementById("card1").value,
+        card2:document.getElementById("card2").value,
+        card3:document.getElementById("card3").value,
+        card4:document.getElementById("card4").value,
+        card5:document.getElementById("card5").value,
+        note1:document.getElementById("note1").value,
+        note2:document.getElementById("note2").value,
+        note3:document.getElementById("note3").value,
+        note4:document.getElementById("note4").value,
+        note5:document.getElementById("note5").value
+    };
+}
+
+function applyProjectData(data){
+    document.getElementById("videoType").value=data.videoType || "future";
+    document.getElementById("rankingStyle").value=data.rankingStyle || "manual";
+    document.getElementById("scriptMode").value=data.scriptMode || "auto";
+    document.getElementById("manualScript").value=data.manualScript || "";
+    document.getElementById("setName").value=data.setName || "";
+    document.getElementById("card1").value=data.card1 || "";
+    document.getElementById("card2").value=data.card2 || "";
+    document.getElementById("card3").value=data.card3 || "";
+    document.getElementById("card4").value=data.card4 || "";
+    document.getElementById("card5").value=data.card5 || "";
+    document.getElementById("note1").value=data.note1 || "";
+    document.getElementById("note2").value=data.note2 || "";
+    document.getElementById("note3").value=data.note3 || "";
+    document.getElementById("note4").value=data.note4 || "";
+    document.getElementById("note5").value=data.note5 || "";
+}
+
+function getSavedProjects(){
+    let raw=localStorage.getItem("pokeshortsProjects");
+    if(!raw){
+        return {};
+    }
+
+    try{
+        return JSON.parse(raw);
+    }catch(error){
+        return {};
+    }
+}
+
+function setSavedProjects(projects){
+    localStorage.setItem("pokeshortsProjects",JSON.stringify(projects));
+}
+
+function saveProject(){
+    let name=document.getElementById("projectName").value.trim();
+
+    if(!name){
+        let setName=document.getElementById("setName").value.trim();
+        name=setName || "Untitled Project";
+    }
+
+    let projects=getSavedProjects();
+    projects[name]=getProjectData();
+    setSavedProjects(projects);
+
+    document.getElementById("projectStatus").textContent="Saved project: " + name;
+    refreshProjectList();
+    document.getElementById("savedProjectsSelect").value=name;
+}
+
+function loadProject(){
+    let name=document.getElementById("savedProjectsSelect").value;
+
+    if(!name){
+        document.getElementById("projectStatus").textContent="Choose a saved project first.";
+        return;
+    }
+
+    let projects=getSavedProjects();
+    let data=projects[name];
+
+    if(!data){
+        document.getElementById("projectStatus").textContent="That project could not be found.";
+        refreshProjectList();
+        return;
+    }
+
+    applyProjectData(data);
+    document.getElementById("projectName").value=name;
+    document.getElementById("projectStatus").textContent="Loaded project: " + name;
+
+    generateEverything();
+}
+
+function deleteProject(){
+    let name=document.getElementById("savedProjectsSelect").value;
+
+    if(!name){
+        document.getElementById("projectStatus").textContent="Choose a saved project to delete.";
+        return;
+    }
+
+    let projects=getSavedProjects();
+    delete projects[name];
+    setSavedProjects(projects);
+
+    document.getElementById("projectStatus").textContent="Deleted project: " + name;
+    refreshProjectList();
+}
+
+function refreshProjectList(){
+    let projects=getSavedProjects();
+    let select=document.getElementById("savedProjectsSelect");
+
+    select.innerHTML="";
+
+    let empty=document.createElement("option");
+    empty.value="";
+    empty.textContent="Select a saved project";
+    select.appendChild(empty);
+
+    let names=Object.keys(projects).sort();
+
+    if(names.length===0){
+        empty.textContent="No saved projects yet";
+        return;
+    }
+
+    names.forEach(function(name){
+        let option=document.createElement("option");
+        option.value=name;
+        option.textContent=name;
+        select.appendChild(option);
+    });
+}
+
+window.addEventListener("load",function(){
+    refreshProjectList();
+});
+
+
+function generateTikTokPackage(){
+    generateEverything();
+
+    let setName=document.getElementById("setName").value.trim() || "Untitled Video";
+    let videoType=document.getElementById("videoType").options[document.getElementById("videoType").selectedIndex].text;
+    let rankingStyle=document.getElementById("rankingStyle").options[document.getElementById("rankingStyle").selectedIndex].text;
+    let scriptMode=document.getElementById("scriptMode").options[document.getElementById("scriptMode").selectedIndex].text;
+
+    latestTikTokPackage=
+`POKÉSHORTS TIKTOK PACKAGE
+
+VIDEO:
+${setName}
+
+TYPE:
+${videoType}
+
+RANKING:
+${rankingStyle}
+
+SCRIPT MODE:
+${scriptMode}
+
+------------------------------
+TIKTOK VOICE SCRIPT
+------------------------------
+${latestTikTokScript}
+
+------------------------------
+ON-SCREEN CAPTIONS
+------------------------------
+${latestCaptions}
+
+------------------------------
+POST CAPTION
+------------------------------
+${latestPostCaption}
+
+------------------------------
+HASHTAGS
+------------------------------
+${latestHashtags}
+
+------------------------------
+STORYBOARD
+------------------------------
+${latestStoryboard}
+
+------------------------------
+VIDEO DIRECTOR PLAN
+------------------------------
+${latestDirectorPlan}
+`;
+
+    document.getElementById("packageOutput").textContent=latestTikTokPackage;
+}
+
+function copyTikTokPackage(){
+    if(!latestTikTokPackage){
+        generateTikTokPackage();
+    }
+
+    copyText(latestTikTokPackage,"TikTok package copied!");
+}
+
+function safeFileName(name){
+    return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g,"-")
+    .replace(/^-+|-+$/g,"") || "pokeshorts-package";
+}
+
+function downloadTikTokPackage(){
+    if(!latestTikTokPackage){
+        generateTikTokPackage();
+    }
+
+    let setName=document.getElementById("setName").value.trim() || "pokeshorts-package";
+    let fileName=safeFileName(setName) + ".txt";
+
+    let blob=new Blob([latestTikTokPackage],{type:"text/plain"});
+    let url=URL.createObjectURL(blob);
+
+    let a=document.createElement("a");
+    a.href=url;
+    a.download=fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    URL.revokeObjectURL(url);
+}
+
+async function shareTikTokPackage(){
+    if(!latestTikTokPackage){
+        generateTikTokPackage();
+    }
+
+    let setName=document.getElementById("setName").value.trim() || "PokéShorts Package";
+
+    if(navigator.share){
+        try{
+            await navigator.share({
+                title:setName,
+                text:latestTikTokPackage
+            });
+        }catch(error){
+            document.getElementById("packageOutput").textContent=
+            latestTikTokPackage + "\n\nShare cancelled or unavailable. You can still copy or download the package.";
+        }
+    }else{
+        copyTikTokPackage();
+        alert("Sharing is not supported in this browser, so the package was copied instead.");
+    }
+}
+
 function clearAll(){
-    let ids=["setName","card1","card2","card3","card4","card5","note1","note2","note3","note4","note5"];
+    let ids=["setName","manualScript","card1","card2","card3","card4","card5","note1","note2","note3","note4","note5"];
     ids.forEach(function(id){
         document.getElementById(id).value="";
     });
@@ -928,6 +1256,11 @@ function clearAll(){
     document.getElementById("videoText").textContent="Your preview will appear here";
     document.getElementById("videoText").style.display="block";
     document.getElementById("videoTimer").textContent="Not playing";
+    if(document.getElementById("packageOutput")){
+        document.getElementById("packageOutput").textContent="No package generated yet.";
+    }
+    latestTikTokPackage="";
+    document.getElementById("projectStatus").textContent="Cleared current working project. Saved projects were not deleted.";
     clearPreviewTimers();
 }
 </script>
