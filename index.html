@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>PokéShorts Engine v2.1</title>
+<title>PokéShorts Engine v2.2</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 :root{--bg:#0d0f14;--panel:#181b23;--panel2:#222735;--text:#fff;--muted:#aeb6c7;--accent:#ffcb05;--accent2:#2a75bb;--danger:#ff5d5d;--ok:#48d17a;}
@@ -20,60 +20,125 @@ button,.btn{width:100%;padding:12px;border:none;border-radius:10px;font-size:16p
 #videoFrame{width:100%;max-width:360px;aspect-ratio:9/16;background:#000;margin:10px auto;border-radius:18px;overflow:hidden;position:relative;box-shadow:0 0 24px rgba(0,0,0,.7)}
 #videoImage{width:100%;height:100%;object-fit:contain;position:absolute;inset:0;transform:scale(1)}.fadeIn{animation:fadeIn .8s ease-in forwards,slowZoom 8s linear forwards}@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes slowZoom{from{transform:scale(1)}to{transform:scale(1.18)}}
 #videoText{position:absolute;bottom:34px;left:14px;right:14px;text-align:center;font-size:24px;font-weight:800;color:white;text-shadow:3px 3px 8px black;background:rgba(0,0,0,.58);padding:10px;border-radius:12px}#videoTimer{text-align:center;font-size:13px;color:var(--muted);margin-top:8px}.hidden{display:none!important}.scoreGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}@media(min-width:700px){.scoreGrid{grid-template-columns:repeat(4,1fr)}}.scoreCard{background:#11151e;border:1px solid #2a3143;border-radius:12px;padding:10px;text-align:center}.scoreNum{font-size:24px;font-weight:800;color:var(--accent)}.statusBadge{display:inline-block;padding:5px 9px;border-radius:999px;background:#30384a;color:#fff;font-size:12px;font-weight:700;margin-top:6px}
+
+/* v2.2 tabbed simplification */
+header{position:sticky;top:0;z-index:10}
+.tabbar{max-width:980px;margin:0 auto;padding:10px 12px 0;display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.tabBtn{margin:0;padding:10px 6px;font-size:13px;border-radius:999px;background:#222735;color:#dbe4f5;border:1px solid #333b4f}
+.tabBtn.active{background:var(--accent);color:#111;border-color:var(--accent)}
+.wrap{max-width:980px;display:block}
+.tabPanel{display:none}
+.tabPanel.active{display:block}
+.stepIntro{background:#10131a;border:1px solid #272e3e;border-radius:14px;padding:12px;margin-bottom:14px;color:#e9edf7}
+.stepIntro strong{color:var(--accent)}
+.navRow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.navRow .single{grid-column:1/-1}
+@media(max-width:520px){.tabbar{grid-template-columns:repeat(3,1fr)}.tabBtn{font-size:12px;padding:9px 4px}.row2{grid-template-columns:1fr}}
+.optionalBox{margin-top:14px;border-top:1px solid #333b4f;padding-top:12px}
+details summary{cursor:pointer;font-weight:700;color:var(--accent);margin-top:8px}
 </style>
 </head>
 <body>
-<header><h1>PokéShorts Engine v2.1</h1><div class="sub">Idea bank → channel voice → hooks → prompt pack → captions → storyboard → silent vertical WebM</div></header>
+<header>
+<h1>PokéShorts Engine v2.2</h1>
+<div class="sub">Simplified tab flow: Idea → Script → Images → Export → Track</div>
+<div class="tabbar">
+<button class="tabBtn active" data-tab="idea" onclick="showTab('idea')">1 Idea</button>
+<button class="tabBtn" data-tab="script" onclick="showTab('script')">2 Script</button>
+<button class="tabBtn" data-tab="images" onclick="showTab('images')">3 Images</button>
+<button class="tabBtn" data-tab="export" onclick="showTab('export')">4 Export</button>
+<button class="tabBtn" data-tab="track" onclick="showTab('track')">5 Track</button>
+</div>
+</header>
+
 <div class="wrap">
-<section class="card">
-<h2>1. Content idea</h2>
+<section id="tab-idea" class="tabPanel active">
+<div class="stepIntro"><strong>Step 1:</strong> Choose the video idea, card list, and angle. Save ideas here before moving to scripting.</div>
+<div class="card">
+<h2>Content idea</h2>
 <div class="row2"><div><label>Format</label><select id="videoType"><option value="future">Future Set Top 5</option><option value="artworks">Favourite Artworks</option><option value="cute">Cute Cards</option><option value="connected">Connected Artworks</option><option value="underrated">Underrated Cards</option><option value="regret">Cards I Regret Not Buying</option><option value="explode">Cards That Could Explode</option><option value="bestset">Best Card In Every Set</option><option value="darkest">Darkest Cards</option><option value="happiest">Happiest Cards</option><option value="saddest">Saddest Cards</option><option value="stories">Pokémon Card Stories</option><option value="facts">Craziest Pokémon Card Facts</option></select></div><div><label>Set / theme</label><input id="setName" placeholder="e.g. Pitch Black / Crown Zenith"></div></div>
 <label>Cards / topics</label><div class="row5"><input id="card1" placeholder="#1"><input id="card2" placeholder="#2"><input id="card3" placeholder="#3"><input id="card4" placeholder="#4"><input id="card5" placeholder="#5"></div>
-<label>Manual script</label><textarea id="manualScript" placeholder="Write exactly what you want the voiceover to say."></textarea>
-<div class="row2"><button onclick="fillManualScriptTemplate()">Fill Script Template</button><button class="blue" onclick="generateEverything()">Generate Pack</button></div><div class="row2"><button class="ok" onclick="generateNaturalDraft()">Generate Natural Draft</button><button class="secondary" onclick="generateHooks()">Generate Hooks</button></div>
-<button class="secondary" onclick="clearWorkingProject()">Clear Current Project</button>
-</section>
-<section class="card">
-<h2>2. Idea queue</h2><p class="small">This is the first automation layer: save repeatable ideas, load one, then generate a pack quickly.</p>
-<input id="ideaTitle" placeholder="Idea title"><textarea id="ideaNotes" placeholder="Notes, angle, hook, source, or why this may perform well"></textarea>
-<div class="row2"><button onclick="saveIdea()">Save Idea</button><button class="secondary" onclick="generateStarterIdeas()">Add Starter Ideas</button></div>
-<div id="ideaQueue" class="box">No saved ideas yet.</div>
-</section>
-
-<section class="card full">
-<h2>3. Pipeline studio</h2>
-<p class="small">This is the no-API content pipeline: choose the channel voice, generate stronger hooks, score the idea, and create a ChatGPT prompt pack for deeper scripts.</p>
 <div class="row2"><div><label>Channel voice</label><select id="channelVoice"><option value="joel">Joel natural - honest collector</option><option value="collector">Collector voice - thoughtful and balanced</option><option value="hype">High-energy Shorts voice</option><option value="story">Storyteller - lore and emotion</option><option value="expert">Expert - confident but simple</option></select></div><div><label>Video angle</label><select id="contentAngle"><option value="opinion">Honest opinion</option><option value="value">Value / investing angle</option><option value="nostalgia">Nostalgia angle</option><option value="debate">Debate bait / comments</option><option value="story">Hidden story</option></select></div></div>
 <label>One-line channel rule</label><input id="channelRule" placeholder="e.g. Sound natural, not cringe. Honest collector opinions, quick pacing.">
-<div class="row2"><button onclick="generateChatGPTPrompt()">Generate ChatGPT Prompt Pack</button><button class="secondary" onclick="scoreCurrentIdea()">Score Current Idea</button></div>
+<div class="row2"><button onclick="scoreCurrentIdea()">Score Current Idea</button><button class="secondary" onclick="generateStarterIdeas()">Add Starter Ideas</button></div>
 <div id="scoreOutput" class="box">No idea score yet.</div>
-<div id="hookOutput" class="box">No hooks generated yet.</div>
-<button onclick="copyPromptPack()">Copy Prompt Pack</button>
-<div id="promptOutput" class="box">No prompt pack generated yet.</div>
+</div>
+<div class="card">
+<h2>Idea queue</h2><p class="small">Save repeatable ideas here. Load one when you want to turn it into a video.</p>
+<input id="ideaTitle" placeholder="Idea title"><textarea id="ideaNotes" placeholder="Notes, angle, hook, source, or why this may perform well"></textarea>
+<button onclick="saveIdea()">Save Idea</button>
+<div id="ideaQueue" class="box">No saved ideas yet.</div>
+</div>
+<div class="navRow"><button class="secondary single" onclick="showTab('script')">Next: Script →</button></div>
 </section>
 
-<section class="card full">
-<h2>4. AI Script Studio</h2>
-<p class="small">This connects to your private Vercel backend. Your OpenAI API key stays on Vercel, not in this page. Use your access code to unlock generation.</p>
+<section id="tab-script" class="tabPanel">
+<div class="stepIntro"><strong>Step 2:</strong> Generate hooks, create a natural draft, or copy a deeper ChatGPT prompt pack.</div>
+<div class="card">
+<h2>Script studio</h2>
+<label>Manual script</label><textarea id="manualScript" placeholder="Write exactly what you want the voiceover to say."></textarea>
+<div class="row2"><button onclick="fillManualScriptTemplate()">Fill Template</button><button class="ok" onclick="generateNaturalDraft()">Natural Draft</button></div>
+<div class="row2"><button class="secondary" onclick="generateHooks()">Generate Hooks</button><button class="blue" onclick="generateEverything()">Generate Pack</button></div>
+<div id="hookOutput" class="box">No hooks generated yet.</div>
+</div>
+<div class="card">
+<h2>Prompt pack for ChatGPT</h2>
+<p class="small">Use this when you want a deeper script from ChatGPT without connecting the OpenAI API yet.</p>
+<div class="row2"><button onclick="generateChatGPTPrompt()">Generate Prompt Pack</button><button onclick="copyPromptPack()">Copy Prompt Pack</button></div>
+<div id="promptOutput" class="box">No prompt pack generated yet.</div>
+</div>
+<div class="card">
+<h2>Outputs</h2>
+<button onclick="copyScript()">Copy Script</button><div id="scriptOutput" class="box">No script generated yet.</div>
+<button onclick="copyCaptions()">Copy Captions</button><div id="captionsOutput" class="box">No captions generated yet.</div>
+<button onclick="copyStoryboard()">Copy Storyboard</button><div id="storyboardOutput" class="box">No storyboard generated yet.</div>
+</div>
+<details class="card optionalBox"><summary>Optional: real AI backend settings</summary>
+<p class="small">Only use this later when Vercel/OpenAI API is set up. Your API key should never go inside this HTML file.</p>
 <div class="row2"><div><label>Backend URL</label><input id="backendUrl" placeholder="https://your-vercel-project.vercel.app/api/generate-script"></div><div><label>Access code</label><input id="accessCode" type="password" placeholder="Private code from Vercel"></div></div>
 <div class="row2"><div><label>Voice style</label><select id="voiceStyle"><option value="natural">Natural collector voice</option><option value="excited">Excited TikTok voice</option><option value="calm">Calm expert voice</option><option value="funny">Funny but not cringe</option><option value="dramatic">Dramatic countdown</option></select></div><div><label>Length</label><select id="scriptLength"><option value="35">35 seconds</option><option value="45" selected>45 seconds</option><option value="60">60 seconds</option></select></div></div>
-<label>Extra direction for the AI</label><textarea id="aiNotes" placeholder="Example: Make it sound like me, not too salesy. Mention that the number 1 card is my favourite because the artwork feels nostalgic."></textarea>
+<label>Extra direction for the AI</label><textarea id="aiNotes" placeholder="Example: Make it sound like me, not too salesy."></textarea>
 <div class="row2"><button class="blue" onclick="generateWithAI()">Generate With Real AI</button><button class="secondary" onclick="saveAISettings()">Save AI Settings</button></div>
-<div id="aiStatus" class="box">AI is not connected yet. Add your backend URL and access code after Vercel is set up.</div>
+<div id="aiStatus" class="box">AI is not connected yet.</div>
+</details>
+<div class="navRow"><button class="secondary" onclick="showTab('idea')">← Back</button><button class="secondary" onclick="showTab('images')">Next: Images →</button></div>
 </section>
-<section class="card full">
-<h2>5. Images</h2><div class="row5" id="imageGrid"></div>
+
+<section id="tab-images" class="tabPanel">
+<div class="stepIntro"><strong>Step 3:</strong> Add your five images. The site will use them for the preview and WebM export.</div>
+<div class="card"><h2>Images</h2><div class="row5" id="imageGrid"></div></div>
+<div class="navRow"><button class="secondary" onclick="showTab('script')">← Back</button><button class="secondary" onclick="showTab('export')">Next: Export →</button></div>
 </section>
-<section class="card">
-<h2>6. Outputs</h2><button onclick="copyScript()">Copy Script</button><div id="scriptOutput" class="box">No script generated yet.</div><button onclick="copyCaptions()">Copy Captions</button><div id="captionsOutput" class="box">No captions generated yet.</div><button onclick="copyStoryboard()">Copy Storyboard</button><div id="storyboardOutput" class="box">No storyboard generated yet.</div>
+
+<section id="tab-export" class="tabPanel">
+<div class="stepIntro"><strong>Step 4:</strong> Preview the video, then export a silent vertical WebM ready for upload/editing.</div>
+<div class="card">
+<h2>Preview & export</h2><button onclick="playVideoPreview()">Play Preview</button><button class="ok" onclick="markExportedAndDownload()">Export WebM</button><div id="downloadStatus" class="box">No video exported yet.</div><div id="downloadLinkArea"></div><div id="videoFrame"><img id="videoImage"><div id="videoText">Your preview will appear here</div></div><div id="videoTimer">Not playing</div>
+</div>
+<div class="navRow"><button class="secondary" onclick="showTab('images')">← Back</button><button class="secondary" onclick="showTab('track')">Next: Track →</button></div>
 </section>
-<section class="card">
-<h2>7. Preview & export</h2><button onclick="playVideoPreview()">Play Preview</button><button class="ok" onclick="downloadWebMVideo()">Export WebM</button><div id="downloadStatus" class="box">No video exported yet.</div><div id="downloadLinkArea"></div><div id="videoFrame"><img id="videoImage"><div id="videoText">Your preview will appear here</div></div><div id="videoTimer">Not playing</div>
+
+<section id="tab-track" class="tabPanel">
+<div class="stepIntro"><strong>Step 5:</strong> Save the project and track what happens after posting.</div>
+<div class="card">
+<h2>Projects & performance tracker</h2><div class="row2"><input id="projectName" placeholder="Project name"><select id="savedProjectsSelect"></select></div><div class="row2"><div><label>Pipeline status</label><select id="projectStage"><option value="Idea">Idea</option><option value="Scripted">Scripted</option><option value="Images Added">Images Added</option><option value="Exported">Exported</option><option value="Posted">Posted</option></select></div><div><label>Platform</label><select id="platform"><option value="Not posted">Not posted</option><option value="TikTok">TikTok</option><option value="YouTube Shorts">YouTube Shorts</option><option value="Instagram Reels">Instagram Reels</option></select></div></div><div class="row2"><button onclick="saveProject()">Save Project</button><button class="secondary" onclick="loadProject()">Load Project</button></div><div class="row2"><button class="danger" onclick="deleteProject()">Delete Project</button><button class="ghost" onclick="refreshProjectList()">Refresh</button></div><div class="row2"><input id="views" inputmode="numeric" placeholder="Views"><input id="likes" inputmode="numeric" placeholder="Likes"></div><input id="postedUrl" placeholder="Posted video URL"><button class="blue" onclick="savePerformance()">Save Performance To Project</button><button class="secondary" onclick="clearWorkingProject()">Clear Current Project</button><div id="projectStatus" class="box">No project action yet.</div>
+</div>
+<div class="navRow"><button class="secondary" onclick="showTab('export')">← Back</button><button class="secondary" onclick="showTab('idea')">Start New Idea</button></div>
 </section>
-<section class="card full">
-<h2>8. Projects & performance tracker</h2><div class="row2"><input id="projectName" placeholder="Project name"><select id="savedProjectsSelect"></select></div><div class="row2"><div><label>Pipeline status</label><select id="projectStage"><option value="Idea">Idea</option><option value="Scripted">Scripted</option><option value="Images Added">Images Added</option><option value="Exported">Exported</option><option value="Posted">Posted</option></select></div><div><label>Platform</label><select id="platform"><option value="Not posted">Not posted</option><option value="TikTok">TikTok</option><option value="YouTube Shorts">YouTube Shorts</option><option value="Instagram Reels">Instagram Reels</option></select></div></div><div class="row2"><button onclick="saveProject()">Save Project</button><button class="secondary" onclick="loadProject()">Load Project</button></div><div class="row2"><button class="danger" onclick="deleteProject()">Delete Project</button><button class="ghost" onclick="refreshProjectList()">Refresh</button></div><div class="row2"><input id="views" inputmode="numeric" placeholder="Views"><input id="likes" inputmode="numeric" placeholder="Likes"></div><input id="postedUrl" placeholder="Posted video URL"><button class="blue" onclick="savePerformance()">Save Performance To Project</button><div id="projectStatus" class="box">No project action yet.</div></section>
 </div>
 <script>
+function showTab(name){
+  document.querySelectorAll('.tabPanel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tabBtn').forEach(b=>b.classList.remove('active'));
+  let panel=document.getElementById('tab-'+name); if(panel) panel.classList.add('active');
+  let btn=document.querySelector('.tabBtn[data-tab="'+name+'"]'); if(btn) btn.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function markExportedAndDownload(){
+  if(document.getElementById('projectStage')) document.getElementById('projectStage').value='Exported';
+  downloadWebMVideo();
+}
+
 let latestScript="",latestCaptions="",latestStoryboard="",previewTimeouts=[];
 function $(id){return document.getElementById(id)}
 function clearPreviewTimers(){previewTimeouts.forEach(clearTimeout);previewTimeouts=[]}
@@ -156,6 +221,7 @@ function renderIdeas(){let ideas=storage('pokeshortsIdeas'),ids=Object.keys(idea
 function generateStarterIdeas(){let starters=['Top 5 cards I think collectors are sleeping on','5 Pokémon cards with surprisingly dark stories','Top 5 affordable cards that look expensive','5 cards I regret not buying earlier','The happiest Pokémon card artworks ever'];let ideas=storage('pokeshortsIdeas');starters.forEach(t=>ideas[Date.now()+Math.random()]={title:t,notes:'Starter idea. Add cards, images, and your personal angle.',createdAt:new Date().toISOString(),videoType:'underrated',setName:t,cards:['','','','','']});setStorage('pokeshortsIdeas',ideas);renderIdeas()}
 function clearWorkingProject(){['setName','card1','card2','card3','card4','card5','manualScript','projectName','views','likes','postedUrl','channelRule'].forEach(id=>$(id).value='');$('projectStage').value='Idea';$('platform').value='Not posted';for(let i=1;i<=5;i++)$('preview'+i).removeAttribute('src');latestScript=latestCaptions=latestStoryboard='';$('scriptOutput').textContent='No script generated yet.';$('captionsOutput').textContent='No captions generated yet.';$('storyboardOutput').textContent='No storyboard generated yet.';$('videoText').textContent='Your preview will appear here';$('videoTimer').textContent='Not playing';$('downloadStatus').textContent='No video exported yet.';$('downloadLinkArea').innerHTML='';if($('scoreOutput'))$('scoreOutput').textContent='No idea score yet.';if($('hookOutput'))$('hookOutput').textContent='No hooks generated yet.';if($('promptOutput'))$('promptOutput').textContent='No prompt pack generated yet.';clearPreviewTimers()}
 window.addEventListener('load',()=>{buildImageGrid();refreshProjectList();renderIdeas();loadAISettings()});
+
 </script>
 </body>
 </html>
