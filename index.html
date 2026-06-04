@@ -1,864 +1,94 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>PokéShorts Maker - Manual Script</title>
+<title>PokéShorts Engine v1</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <style>
-body{
-    font-family:Arial,sans-serif;
-    padding:20px;
-    background:#111;
-    color:white;
-}
-
-h1,h2,h3{
-    margin-top:0;
-}
-
-input,select,textarea{
-    width:100%;
-    padding:10px;
-    font-size:18px;
-    margin-bottom:10px;
-    border-radius:8px;
-    border:none;
-    box-sizing:border-box;
-}
-
-textarea{
-    min-height:120px;
-    font-size:16px;
-    resize:vertical;
-}
-
-button{
-    width:100%;
-    padding:12px;
-    font-size:18px;
-    border:none;
-    border-radius:8px;
-    cursor:pointer;
-    margin-top:10px;
-}
-
-.section{
-    margin-top:20px;
-    padding:15px;
-    background:#222;
-    border-radius:10px;
-}
-
-.small{
-    font-size:14px;
-    color:#ccc;
-    line-height:1.5;
-}
-
-.copyBox{
-    margin-top:10px;
-    padding:12px;
-    background:#333;
-    border-radius:8px;
-    white-space:pre-wrap;
-    line-height:1.5;
-}
-
-.imageBox{
-    margin-top:15px;
-    padding:10px;
-    background:#1a1a1a;
-    border-radius:10px;
-}
-
-.preview{
-    width:100%;
-    max-height:300px;
-    object-fit:contain;
-    margin-top:10px;
-    border-radius:8px;
-    background:#000;
-}
-
-.scene{
-    margin-bottom:15px;
-    padding:10px;
-    background:#333;
-    border-radius:8px;
-}
-
-#videoFrame{
-    width:100%;
-    max-width:360px;
-    aspect-ratio:9/16;
-    background:#000;
-    margin:20px auto;
-    border-radius:18px;
-    overflow:hidden;
-    position:relative;
-    box-shadow:0 0 20px rgba(0,0,0,.6);
-}
-
-#videoImage{
-    width:100%;
-    height:100%;
-    object-fit:contain;
-    position:absolute;
-    top:0;
-    left:0;
-    transform:scale(1);
-}
-
-.zoom{
-    animation:slowZoom 8s linear forwards;
-}
-
-.fadeIn{
-    animation:fadeIn 0.8s ease-in forwards, slowZoom 8s linear forwards;
-}
-
-@keyframes fadeIn{
-    from{opacity:0;}
-    to{opacity:1;}
-}
-
-@keyframes slowZoom{
-    from{transform:scale(1)}
-    to{transform:scale(1.18)}
-}
-
-#videoText{
-    position:absolute;
-    bottom:40px;
-    left:15px;
-    right:15px;
-    text-align:center;
-    font-size:26px;
-    font-weight:bold;
-    color:white;
-    text-shadow:3px 3px 6px black;
-    background:rgba(0,0,0,.55);
-    padding:10px;
-    border-radius:10px;
-}
-
-#videoTimer{
-    text-align:center;
-    font-size:14px;
-    color:#ccc;
-    margin-top:10px;
-}
-
-.downloadLink{
-    display:block;
-    margin-top:15px;
-    padding:12px;
-    border-radius:8px;
-    background:white;
-    color:black;
-    text-align:center;
-    text-decoration:none;
-    font-weight:bold;
-}
+:root{--bg:#0d0f14;--panel:#181b23;--panel2:#222735;--text:#fff;--muted:#aeb6c7;--accent:#ffcb05;--accent2:#2a75bb;--danger:#ff5d5d;--ok:#48d17a;}
+*{box-sizing:border-box} body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(180deg,#0d0f14,#07080b);color:var(--text)}
+header{position:sticky;top:0;z-index:5;background:rgba(13,15,20,.92);backdrop-filter:blur(8px);padding:14px 16px;border-bottom:1px solid #242938}
+h1{font-size:22px;margin:0}.sub{font-size:13px;color:var(--muted);margin-top:4px}.wrap{max-width:1120px;margin:0 auto;padding:16px;display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:900px){.wrap{grid-template-columns:1.1fr .9fr}.full{grid-column:1/-1}}
+.card{background:var(--panel);border:1px solid #252b3a;border-radius:16px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+h2{font-size:18px;margin:0 0 10px} label{display:block;font-size:13px;color:var(--muted);margin:10px 0 6px}
+input,select,textarea{width:100%;padding:11px;font-size:16px;border-radius:10px;border:1px solid #30384a;background:#0f1219;color:#fff;outline:none} textarea{min-height:120px;resize:vertical;line-height:1.45}
+.row{display:grid;grid-template-columns:1fr;gap:10px}.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.row5{display:grid;grid-template-columns:1fr;gap:10px}@media(min-width:700px){.row5{grid-template-columns:repeat(5,1fr)}}
+button,.btn{width:100%;padding:12px;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;background:var(--accent);color:#111;margin-top:10px;text-align:center;text-decoration:none;display:block}.secondary{background:#30384a;color:#fff}.danger{background:var(--danger);color:#111}.ok{background:var(--ok);color:#08120b}.blue{background:var(--accent2);color:white}.ghost{background:transparent;color:#fff;border:1px solid #394255}
+.small{font-size:13px;color:var(--muted);line-height:1.5}.box{margin-top:10px;padding:12px;background:#10131a;border:1px solid #272e3e;border-radius:10px;white-space:pre-wrap;line-height:1.5;color:#e9edf7}.pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#30384a;color:#dbe4f5;font-size:12px;margin:2px}
+.scene,.idea{padding:10px;background:var(--panel2);border-radius:10px;margin-top:8px;border:1px solid #333b4f}.ideaTop{display:flex;gap:8px;align-items:center;justify-content:space-between}.ideaTitle{font-weight:700}.ideaMeta{font-size:12px;color:var(--muted)}
+.previewImg{width:100%;aspect-ratio:3/4;object-fit:contain;background:#050505;border-radius:10px;border:1px solid #2a3143;margin-top:8px}.imageSlot{background:#11151e;border-radius:12px;padding:10px;border:1px solid #2a3143}.imageSlot strong{font-size:13px}
+#videoFrame{width:100%;max-width:360px;aspect-ratio:9/16;background:#000;margin:10px auto;border-radius:18px;overflow:hidden;position:relative;box-shadow:0 0 24px rgba(0,0,0,.7)}
+#videoImage{width:100%;height:100%;object-fit:contain;position:absolute;inset:0;transform:scale(1)}.fadeIn{animation:fadeIn .8s ease-in forwards,slowZoom 8s linear forwards}@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes slowZoom{from{transform:scale(1)}to{transform:scale(1.18)}}
+#videoText{position:absolute;bottom:34px;left:14px;right:14px;text-align:center;font-size:24px;font-weight:800;color:white;text-shadow:3px 3px 8px black;background:rgba(0,0,0,.58);padding:10px;border-radius:12px}#videoTimer{text-align:center;font-size:13px;color:var(--muted);margin-top:8px}.hidden{display:none!important}
 </style>
 </head>
-
 <body>
-
-<h1>PokéShorts Maker</h1>
-
-<select id="videoType">
-<option value="future">Future Set Top 5</option>
-<option value="artworks">Favourite Artworks</option>
-<option value="cute">Cute Cards</option>
-<option value="connected">Connected Artworks</option>
-<option value="underrated">Underrated Cards</option>
-<option value="regret">Cards I Regret Not Buying</option>
-<option value="explode">Cards That Could Explode</option>
-<option value="bestset">Best Card In Every Set</option>
-<option value="darkest">Darkest Cards</option>
-<option value="happiest">Happiest Cards</option>
-<option value="saddest">Saddest Cards</option>
-<option value="stories">Pokémon Card Stories</option>
-<option value="facts">Craziest Pokémon Card Facts</option>
-</select>
-
-<input id="setName" placeholder="Set name / theme">
-
-<input id="card1" placeholder="Card #1">
-<input id="card2" placeholder="Card #2">
-<input id="card3" placeholder="Card #3">
-<input id="card4" placeholder="Card #4">
-<input id="card5" placeholder="Card #5">
-
-<textarea id="manualScript" placeholder="Write the exact script you want TikTok text-to-speech to say."></textarea>
-
-<button onclick="fillManualScriptTemplate()">Fill Manual Script Template</button>
-<button onclick="generateEverything()">Generate From Manual Script</button>
-<button onclick="clearAll()">Clear Everything</button>
-
-<div class="section">
-<h2>Saved Projects</h2>
-<p class="small">Save your current cards and manual script, then load it later.</p>
-<input id="projectName" placeholder="Project name - e.g. Pitch Black Top 5">
-<button onclick="saveProject()">Save Current Project</button>
-<select id="savedProjectsSelect">
-<option value="">No saved project selected</option>
-</select>
-<button onclick="loadProject()">Load Selected Project</button>
-<button onclick="deleteProject()">Delete Selected Project</button>
-<button onclick="refreshProjectList()">Refresh Project List</button>
-<div id="projectStatus" class="copyBox">No project action yet.</div>
+<header><h1>PokéShorts Engine v1</h1><div class="sub">Idea queue → script → captions → storyboard → silent vertical WebM</div></header>
+<div class="wrap">
+<section class="card">
+<h2>1. Content idea</h2>
+<div class="row2"><div><label>Format</label><select id="videoType"><option value="future">Future Set Top 5</option><option value="artworks">Favourite Artworks</option><option value="cute">Cute Cards</option><option value="connected">Connected Artworks</option><option value="underrated">Underrated Cards</option><option value="regret">Cards I Regret Not Buying</option><option value="explode">Cards That Could Explode</option><option value="bestset">Best Card In Every Set</option><option value="darkest">Darkest Cards</option><option value="happiest">Happiest Cards</option><option value="saddest">Saddest Cards</option><option value="stories">Pokémon Card Stories</option><option value="facts">Craziest Pokémon Card Facts</option></select></div><div><label>Set / theme</label><input id="setName" placeholder="e.g. Pitch Black / Crown Zenith"></div></div>
+<label>Cards / topics</label><div class="row5"><input id="card1" placeholder="#1"><input id="card2" placeholder="#2"><input id="card3" placeholder="#3"><input id="card4" placeholder="#4"><input id="card5" placeholder="#5"></div>
+<label>Manual script</label><textarea id="manualScript" placeholder="Write exactly what you want the voiceover to say."></textarea>
+<div class="row2"><button onclick="fillManualScriptTemplate()">Fill Script Template</button><button class="blue" onclick="generateEverything()">Generate Pack</button></div>
+<button class="secondary" onclick="clearWorkingProject()">Clear Current Project</button>
+</section>
+<section class="card">
+<h2>2. Idea queue</h2><p class="small">This is the first automation layer: save repeatable ideas, load one, then generate a pack quickly.</p>
+<input id="ideaTitle" placeholder="Idea title"><textarea id="ideaNotes" placeholder="Notes, angle, hook, source, or why this may perform well"></textarea>
+<div class="row2"><button onclick="saveIdea()">Save Idea</button><button class="secondary" onclick="generateStarterIdeas()">Add Starter Ideas</button></div>
+<div id="ideaQueue" class="box">No saved ideas yet.</div>
+</section>
+<section class="card full">
+<h2>3. Images</h2><div class="row5" id="imageGrid"></div>
+</section>
+<section class="card">
+<h2>4. Outputs</h2><button onclick="copyScript()">Copy Script</button><div id="scriptOutput" class="box">No script generated yet.</div><button onclick="copyCaptions()">Copy Captions</button><div id="captionsOutput" class="box">No captions generated yet.</div><button onclick="copyStoryboard()">Copy Storyboard</button><div id="storyboardOutput" class="box">No storyboard generated yet.</div>
+</section>
+<section class="card">
+<h2>5. Preview & export</h2><button onclick="playVideoPreview()">Play Preview</button><button class="ok" onclick="downloadWebMVideo()">Export WebM</button><div id="downloadStatus" class="box">No video exported yet.</div><div id="downloadLinkArea"></div><div id="videoFrame"><img id="videoImage"><div id="videoText">Your preview will appear here</div></div><div id="videoTimer">Not playing</div>
+</section>
+<section class="card full">
+<h2>6. Projects & performance tracker</h2><div class="row2"><input id="projectName" placeholder="Project name"><select id="savedProjectsSelect"></select></div><div class="row2"><button onclick="saveProject()">Save Project</button><button class="secondary" onclick="loadProject()">Load Project</button></div><div class="row2"><button class="danger" onclick="deleteProject()">Delete Project</button><button class="ghost" onclick="refreshProjectList()">Refresh</button></div><div class="row2"><input id="views" inputmode="numeric" placeholder="Views"><input id="likes" inputmode="numeric" placeholder="Likes"></div><input id="postedUrl" placeholder="Posted video URL"><button class="blue" onclick="savePerformance()">Save Performance To Project</button><div id="projectStatus" class="box">No project action yet.</div></section>
 </div>
-
-<div class="imageBox">
-<strong>Image for Card #1</strong>
-<input type="file" accept="image/*" onchange="previewImage(event,'preview1',1)">
-<img id="preview1" class="preview">
-</div>
-
-<div class="imageBox">
-<strong>Image for Card #2</strong>
-<input type="file" accept="image/*" onchange="previewImage(event,'preview2',2)">
-<img id="preview2" class="preview">
-</div>
-
-<div class="imageBox">
-<strong>Image for Card #3</strong>
-<input type="file" accept="image/*" onchange="previewImage(event,'preview3',3)">
-<img id="preview3" class="preview">
-</div>
-
-<div class="imageBox">
-<strong>Image for Card #4</strong>
-<input type="file" accept="image/*" onchange="previewImage(event,'preview4',4)">
-<img id="preview4" class="preview">
-</div>
-
-<div class="imageBox">
-<strong>Image for Card #5</strong>
-<input type="file" accept="image/*" onchange="previewImage(event,'preview5',5)">
-<img id="preview5" class="preview">
-</div>
-
-<div class="section">
-<h2>Script</h2>
-<div id="scriptOutput" class="copyBox">No script generated yet.</div>
-<button onclick="copyScript()">Copy Script</button>
-</div>
-
-<div class="section">
-<h2>On-Screen Captions</h2>
-<p class="small">Short text overlays for the video.</p>
-<div id="captionsOutput" class="copyBox">No captions generated yet.</div>
-<button onclick="copyCaptions()">Copy Captions</button>
-</div>
-
-<div class="section">
-<h2>Storyboard</h2>
-<div id="storyboardOutput">No storyboard generated yet.</div>
-<button onclick="copyStoryboard()">Copy Storyboard</button>
-</div>
-
-<div class="section">
-<h2>Download Video</h2>
-<p class="small">Exports the visual preview as a silent vertical WebM video. Upload this to TikTok, then add text layers and TikTok text-to-speech.</p>
-<button onclick="downloadWebMVideo()">Download Preview as WebM</button>
-<div id="downloadStatus" class="copyBox">No video exported yet.</div>
-<div id="downloadLinkArea"></div>
-</div>
-
-<div class="section">
-<h2>Video Preview</h2>
-<button onclick="playVideoPreview()">Generate Video Preview</button>
-<div id="videoFrame">
-<img id="videoImage">
-<div id="videoText">Your preview will appear here</div>
-</div>
-<div id="videoTimer">Not playing</div>
-</div>
-
 <script>
-let latestScript="";
-let latestCaptions="";
-let latestStoryboard="";
-let previewTimeouts=[];
-
-function clearPreviewTimers(){
-    previewTimeouts.forEach(function(timer){clearTimeout(timer)});
-    previewTimeouts=[];
-}
-
-function cleanFileNameToCardName(fileName){
-    let name=fileName.replace(/\.[^/.]+$/,"");
-    name=name.replace(/[_-]+/g," ");
-    name=name.replace(/\b(img|image|screenshot|download|edited|copy|card)\b/gi,"");
-    name=name.replace(/\d{6,}/g,"");
-    name=name.replace(/\s+/g," ").trim();
-    return name || "";
-}
-
-function previewImage(event,previewId,cardNumber){
-    let file=event.target.files[0];
-    if(!file)return;
-
-    let reader=new FileReader();
-    reader.onload=function(e){
-        document.getElementById(previewId).src=e.target.result;
-    };
-    reader.readAsDataURL(file);
-
-    let guessedName=cleanFileNameToCardName(file.name);
-    let cardInput=document.getElementById("card"+cardNumber);
-
-    if(guessedName && !cardInput.value.trim()){
-        cardInput.value=guessedName;
-    }
-}
-
-function getCards(){
-    return [
-        document.getElementById("card1").value.trim() || "Card 1",
-        document.getElementById("card2").value.trim() || "Card 2",
-        document.getElementById("card3").value.trim() || "Card 3",
-        document.getElementById("card4").value.trim() || "Card 4",
-        document.getElementById("card5").value.trim() || "Card 5"
-    ];
-}
-
-function getImages(){
-    return [
-        document.getElementById("preview1").src,
-        document.getElementById("preview2").src,
-        document.getElementById("preview3").src,
-        document.getElementById("preview4").src,
-        document.getElementById("preview5").src
-    ];
-}
-
-function getCaptionTheme(){
-    let videoType=document.getElementById("videoType").value;
-    let setName=document.getElementById("setName").value.trim() || "Pokémon Cards";
-
-    let map={
-        future:`TOP 5 ${setName.toUpperCase()} CARDS`,
-        artworks:"TOP 5 FAVOURITE ARTWORKS",
-        cute:"TOP 5 CUTEST CARDS",
-        connected:"TOP 5 CONNECTED ARTWORKS",
-        underrated:"TOP 5 UNDERRATED CARDS",
-        regret:"TOP 5 CARDS I REGRET",
-        explode:"TOP 5 CARDS THAT COULD EXPLODE",
-        bestset:"BEST CARD FROM EACH SET",
-        darkest:"TOP 5 DARKEST CARDS",
-        happiest:"TOP 5 HAPPIEST CARDS",
-        saddest:"TOP 5 SADDEST CARDS",
-        stories:"TOP 5 STORY CARDS",
-        facts:"TOP 5 CRAZY CARD FACTS"
-    };
-
-    return map[videoType] || `TOP 5 ${setName.toUpperCase()} CARDS`;
-}
-
-function fillManualScriptTemplate(){
-    let cards=getCards();
-    let setName=document.getElementById("setName").value.trim() || "these cards";
-
-    let template=
-`Here are my Top 5 picks for ${setName}.
-
-At number five, ${cards[4]}. [Say exactly why you picked this card.]
-
-At number four, ${cards[3]}. [Say exactly why this one stands out.]
-
-At number three, ${cards[2]}. [Add your honest opinion here.]
-
-At number two, ${cards[1]}. [Explain why this almost made number one.]
-
-And at number one, ${cards[0]}. [Explain why this is your favourite pick.]
-
-Which card would you put at number one?`;
-
-    document.getElementById("manualScript").value=template;
-}
-
-function generateScript(){
-    let manual=document.getElementById("manualScript").value.trim();
-
-    if(!manual){
-        fillManualScriptTemplate();
-        manual=document.getElementById("manualScript").value.trim();
-    }
-
-    latestScript=manual;
-    document.getElementById("scriptOutput").textContent=latestScript;
-}
-
-function generateCaptions(){
-    let cards=getCards();
-
-    latestCaptions =
-`${getCaptionTheme()}
-
-#5 ${cards[4]}
-
-#4 ${cards[3]}
-
-#3 ${cards[2]}
-
-#2 ${cards[1]}
-
-#1 ${cards[0]}
-
-DID I GET THIS RIGHT?`;
-
-    document.getElementById("captionsOutput").textContent=latestCaptions;
-}
-
-function buildScenes(){
-    let cards=getCards();
-    let images=getImages();
-
-    return [
-        {image:"",text:getCaptionTheme(),time:"0:00 - 0:03",duration:3000,type:"hook"},
-        {image:images[4],text:"#5 "+cards[4],time:"0:03 - 0:11",duration:8000,type:"card"},
-        {image:images[3],text:"#4 "+cards[3],time:"0:11 - 0:19",duration:8000,type:"card"},
-        {image:images[2],text:"#3 "+cards[2],time:"0:19 - 0:27",duration:8000,type:"card"},
-        {image:images[1],text:"#2 "+cards[1],time:"0:27 - 0:35",duration:8000,type:"card"},
-        {image:images[0],text:"#1 "+cards[0],time:"0:35 - 0:43",duration:8000,type:"card"},
-        {image:"",text:"DID I GET THIS RIGHT?",time:"0:43 - 0:46",duration:3000,type:"cta"}
-    ];
-}
-
-function generateStoryboard(){
-    let scenes=buildScenes();
-    let html="<h3>46 Second Storyboard</h3>";
-    let plain=[];
-
-    scenes.forEach(function(scene){
-        if(scene.type === "pause"){
-            html += `<div class="scene"><strong>${scene.time}</strong><br>1 second pause / transition</div>`;
-            plain.push(`${scene.time} - Pause / transition`);
-        }else{
-            html += `<div class="scene"><strong>${scene.time}</strong><br>${scene.type.toUpperCase()}<br>Text: "${scene.text}"</div>`;
-            plain.push(`${scene.time} - ${scene.type.toUpperCase()} - ${scene.text}`);
-        }
-    });
-
-    latestStoryboard=plain.join("\n");
-    document.getElementById("storyboardOutput").innerHTML=html;
-}
-
-function playVideoPreview(){
-    clearPreviewTimers();
-
-    let scenes=buildScenes();
-    let videoImage=document.getElementById("videoImage");
-    let videoText=document.getElementById("videoText");
-    let timer=document.getElementById("videoTimer");
-
-    let delay=0;
-
-    scenes.forEach(function(scene){
-        let id=setTimeout(function(){
-            videoImage.classList.remove("zoom");
-            videoImage.classList.remove("fadeIn");
-            void videoImage.offsetWidth;
-
-            if(scene.image){
-                videoImage.src=scene.image;
-                videoImage.style.display="block";
-                videoImage.style.opacity="0";
-                videoImage.classList.add("fadeIn");
-            }else{
-                videoImage.removeAttribute("src");
-                videoImage.style.display="none";
-            }
-
-            videoText.textContent=scene.text;
-            videoText.style.display=scene.text ? "block" : "none";
-            timer.textContent=scene.time;
-        },delay);
-
-        previewTimeouts.push(id);
-        delay += scene.duration;
-    });
-
-    previewTimeouts.push(setTimeout(function(){
-        timer.textContent="Preview finished";
-    },delay));
-}
-
-
-function drawRoundedRect(ctx,x,y,w,h,r){
-    if(w<2*r)r=w/2;
-    if(h<2*r)r=h/2;
-    ctx.beginPath();
-    ctx.moveTo(x+r,y);
-    ctx.arcTo(x+w,y,x+w,y+h,r);
-    ctx.arcTo(x+w,y+h,x,y+h,r);
-    ctx.arcTo(x,y+h,x,y,r);
-    ctx.arcTo(x,y,x+w,y,r);
-    ctx.closePath();
-    ctx.fill();
-}
-
-function drawWrappedText(ctx,text,x,y,maxWidth,lineHeight){
-    if(!text)return;
-
-    let words=text.split(" ");
-    let line="";
-    let lines=[];
-
-    for(let i=0;i<words.length;i++){
-        let testLine=line+words[i]+" ";
-        let width=ctx.measureText(testLine).width;
-
-        if(width>maxWidth && i>0){
-            lines.push(line.trim());
-            line=words[i]+" ";
-        }else{
-            line=testLine;
-        }
-    }
-
-    lines.push(line.trim());
-
-    let boxHeight=(lines.length*lineHeight)+40;
-    ctx.fillStyle="rgba(0,0,0,0.58)";
-    drawRoundedRect(ctx,60,y-40,maxWidth+40,boxHeight,22);
-
-    ctx.fillStyle="white";
-    ctx.textAlign="center";
-    ctx.textBaseline="top";
-
-    lines.forEach(function(l,index){
-        ctx.fillText(l,x,y+(index*lineHeight));
-    });
-}
-
-function loadImageForCanvas(src){
-    return new Promise(function(resolve){
-        if(!src){
-            resolve(null);
-            return;
-        }
-
-        let img=new Image();
-
-        img.onload=function(){
-            resolve(img);
-        };
-
-        img.onerror=function(){
-            resolve(null);
-        };
-
-        img.src=src;
-    });
-}
-
-function safeVideoFileName(){
-    let name=document.getElementById("setName").value.trim() || "pokeshorts-video";
-    return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g,"-")
-    .replace(/^-+|-+$/g,"") + ".webm";
-}
-
-async function downloadWebMVideo(){
-    let status=document.getElementById("downloadStatus");
-    let linkArea=document.getElementById("downloadLinkArea");
-
-    status.textContent="Preparing video. Keep this page open...";
-    linkArea.innerHTML="";
-
-    let scenes=buildScenes();
-
-    let canvas=document.createElement("canvas");
-    canvas.width=1080;
-    canvas.height=1920;
-
-    let ctx=canvas.getContext("2d");
-    let stream=canvas.captureStream(30);
-    let chunks=[];
-    let recorder;
-
-    try{
-        recorder=new MediaRecorder(stream,{mimeType:"video/webm;codecs=vp9"});
-    }catch(error){
-        try{
-            recorder=new MediaRecorder(stream,{mimeType:"video/webm;codecs=vp8"});
-        }catch(error2){
-            recorder=new MediaRecorder(stream,{mimeType:"video/webm"});
-        }
-    }
-
-    recorder.ondataavailable=function(event){
-        if(event.data && event.data.size>0){
-            chunks.push(event.data);
-        }
-    };
-
-    recorder.onstop=function(){
-        let blob=new Blob(chunks,{type:"video/webm"});
-        let url=URL.createObjectURL(blob);
-
-        let a=document.createElement("a");
-        a.href=url;
-        a.download=safeVideoFileName();
-        a.className="downloadLink";
-        a.textContent="Tap here to download WebM video";
-
-        linkArea.appendChild(a);
-        status.textContent="Video ready. Tap the download link.";
-    };
-
-    recorder.start();
-
-    for(let sceneIndex=0;sceneIndex<scenes.length;sceneIndex++){
-        let scene=scenes[sceneIndex];
-        let img=await loadImageForCanvas(scene.image);
-        let frames=Math.round((scene.duration/1000)*30);
-
-        for(let frame=0;frame<frames;frame++){
-            let progress=frame/frames;
-
-            ctx.fillStyle="#000";
-            ctx.fillRect(0,0,canvas.width,canvas.height);
-
-            let gradient=ctx.createLinearGradient(0,0,0,canvas.height);
-            gradient.addColorStop(0,"#151515");
-            gradient.addColorStop(1,"#000000");
-            ctx.fillStyle=gradient;
-            ctx.fillRect(0,0,canvas.width,canvas.height);
-
-            if(img){
-                let scale=1+(progress*0.18);
-                let ratio=Math.min((canvas.width*0.82)/img.width,(canvas.height*0.68)/img.height)*scale;
-                let w=img.width*ratio;
-                let h=img.height*ratio;
-
-                let fadeFrames=24;
-                let alpha=1;
-
-                if(frame<fadeFrames){
-                    alpha=frame/fadeFrames;
-                }else if(frame>frames-fadeFrames){
-                    alpha=(frames-frame)/fadeFrames;
-                }
-
-                ctx.save();
-                ctx.globalAlpha=Math.max(0,Math.min(1,alpha));
-                ctx.drawImage(
-                    img,
-                    (canvas.width-w)/2,
-                    (canvas.height-h)/2-80,
-                    w,
-                    h
-                );
-                ctx.restore();
-            }
-
-            if(scene.text){
-                ctx.font="bold 76px Arial";
-                drawWrappedText(ctx,scene.text.toUpperCase(),canvas.width/2,1490,900,88);
-            }
-
-            ctx.font="32px Arial";
-            ctx.fillStyle="rgba(255,255,255,0.75)";
-            ctx.textAlign="center";
-            ctx.textBaseline="top";
-            ctx.fillText(scene.time,canvas.width/2,60);
-
-            await new Promise(function(resolve){
-                setTimeout(resolve,1000/30);
-            });
-        }
-    }
-
-    recorder.stop();
-}
-
-function generateEverything(){
-    generateScript();
-    generateCaptions();
-    generateStoryboard();
-}
-
-function copyText(text,message){
-    navigator.clipboard.writeText(text);
-    alert(message);
-}
-
-function copyScript(){
-    if(!latestScript)generateScript();
-    copyText(latestScript,"Script copied!");
-}
-
-function copyCaptions(){
-    if(!latestCaptions)generateCaptions();
-    copyText(latestCaptions,"Captions copied!");
-}
-
-function copyStoryboard(){
-    if(!latestStoryboard)generateStoryboard();
-    copyText(latestStoryboard,"Storyboard copied!");
-}
-
-function getProjectData(){
-    return {
-        savedAt:new Date().toISOString(),
-        videoType:document.getElementById("videoType").value,
-        setName:document.getElementById("setName").value,
-        card1:document.getElementById("card1").value,
-        card2:document.getElementById("card2").value,
-        card3:document.getElementById("card3").value,
-        card4:document.getElementById("card4").value,
-        card5:document.getElementById("card5").value,
-        manualScript:document.getElementById("manualScript").value
-    };
-}
-
-function applyProjectData(data){
-    document.getElementById("videoType").value=data.videoType || "future";
-    document.getElementById("setName").value=data.setName || "";
-    document.getElementById("card1").value=data.card1 || "";
-    document.getElementById("card2").value=data.card2 || "";
-    document.getElementById("card3").value=data.card3 || "";
-    document.getElementById("card4").value=data.card4 || "";
-    document.getElementById("card5").value=data.card5 || "";
-    document.getElementById("manualScript").value=data.manualScript || "";
-}
-
-function getSavedProjects(){
-    let raw=localStorage.getItem("pokeshortsManualProjects");
-    if(!raw)return {};
-
-    try{
-        return JSON.parse(raw);
-    }catch(error){
-        return {};
-    }
-}
-
-function setSavedProjects(projects){
-    localStorage.setItem("pokeshortsManualProjects",JSON.stringify(projects));
-}
-
-function saveProject(){
-    let name=document.getElementById("projectName").value.trim();
-
-    if(!name){
-        name=document.getElementById("setName").value.trim() || "Untitled Project";
-    }
-
-    let projects=getSavedProjects();
-    projects[name]=getProjectData();
-    setSavedProjects(projects);
-
-    document.getElementById("projectStatus").textContent="Saved project: " + name;
-    refreshProjectList();
-    document.getElementById("savedProjectsSelect").value=name;
-}
-
-function loadProject(){
-    let name=document.getElementById("savedProjectsSelect").value;
-
-    if(!name){
-        document.getElementById("projectStatus").textContent="Choose a saved project first.";
-        return;
-    }
-
-    let projects=getSavedProjects();
-    let data=projects[name];
-
-    if(!data){
-        document.getElementById("projectStatus").textContent="That project could not be found.";
-        refreshProjectList();
-        return;
-    }
-
-    applyProjectData(data);
-    document.getElementById("projectName").value=name;
-    document.getElementById("projectStatus").textContent="Loaded project: " + name;
-
-    generateEverything();
-}
-
-function deleteProject(){
-    let name=document.getElementById("savedProjectsSelect").value;
-
-    if(!name){
-        document.getElementById("projectStatus").textContent="Choose a saved project to delete.";
-        return;
-    }
-
-    let projects=getSavedProjects();
-    delete projects[name];
-    setSavedProjects(projects);
-
-    document.getElementById("projectStatus").textContent="Deleted project: " + name;
-    refreshProjectList();
-}
-
-function refreshProjectList(){
-    let projects=getSavedProjects();
-    let select=document.getElementById("savedProjectsSelect");
-
-    select.innerHTML="";
-
-    let empty=document.createElement("option");
-    empty.value="";
-    empty.textContent="Select a saved project";
-    select.appendChild(empty);
-
-    let names=Object.keys(projects).sort();
-
-    if(names.length===0){
-        empty.textContent="No saved projects yet";
-        return;
-    }
-
-    names.forEach(function(name){
-        let option=document.createElement("option");
-        option.value=name;
-        option.textContent=name;
-        select.appendChild(option);
-    });
-}
-
-function clearAll(){
-    let ids=["setName","card1","card2","card3","card4","card5","manualScript","projectName"];
-
-    ids.forEach(function(id){
-        document.getElementById(id).value="";
-    });
-
-    for(let i=1;i<=5;i++){
-        document.getElementById("preview"+i).removeAttribute("src");
-    }
-
-    latestScript="";
-    latestCaptions="";
-    latestStoryboard="";
-
-    document.getElementById("scriptOutput").textContent="No script generated yet.";
-    document.getElementById("captionsOutput").textContent="No captions generated yet.";
-    document.getElementById("storyboardOutput").textContent="No storyboard generated yet.";
-    document.getElementById("videoText").textContent="Your preview will appear here";
-    document.getElementById("videoText").style.display="block";
-    document.getElementById("videoTimer").textContent="Not playing";
-    document.getElementById("downloadStatus").textContent="No video exported yet.";
-    document.getElementById("downloadLinkArea").innerHTML="";
-    document.getElementById("projectStatus").textContent="Cleared current working project. Saved projects were not deleted.";
-
-    clearPreviewTimers();
-}
-
-window.addEventListener("load",function(){
-    refreshProjectList();
-});
+let latestScript="",latestCaptions="",latestStoryboard="",previewTimeouts=[];
+function $(id){return document.getElementById(id)}
+function clearPreviewTimers(){previewTimeouts.forEach(clearTimeout);previewTimeouts=[]}
+function cleanFileNameToCardName(fileName){return fileName.replace(/\.[^/.]+$/,'').replace(/[_-]+/g,' ').replace(/\b(img|image|screenshot|download|edited|copy|card)\b/gi,'').replace(/\d{6,}/g,'').replace(/\s+/g,' ').trim()||''}
+function previewImage(event,previewId,cardNumber){let file=event.target.files[0];if(!file)return;let reader=new FileReader();reader.onload=e=>$(previewId).src=e.target.result;reader.readAsDataURL(file);let guessed=cleanFileNameToCardName(file.name);let input=$("card"+cardNumber);if(guessed&&!input.value.trim())input.value=guessed}
+function buildImageGrid(){let html='';for(let i=1;i<=5;i++){html+=`<div class="imageSlot"><strong>Image for #${i}</strong><input type="file" accept="image/*" onchange="previewImage(event,'preview${i}',${i})"><img id="preview${i}" class="previewImg"></div>`} $('imageGrid').innerHTML=html}
+function getCards(){return [1,2,3,4,5].map(i=>$("card"+i).value.trim()||"Card "+i)}
+function getImages(){return [1,2,3,4,5].map(i=>$("preview"+i).src||'')}
+function getCaptionTheme(){let t=$('videoType').value,set=($('setName').value.trim()||'Pokémon Cards').toUpperCase();let map={future:`TOP 5 ${set} CARDS`,artworks:'TOP 5 FAVOURITE ARTWORKS',cute:'TOP 5 CUTEST CARDS',connected:'TOP 5 CONNECTED ARTWORKS',underrated:'TOP 5 UNDERRATED CARDS',regret:'TOP 5 CARDS I REGRET',explode:'TOP 5 CARDS THAT COULD EXPLODE',bestset:'BEST CARD FROM EACH SET',darkest:'TOP 5 DARKEST CARDS',happiest:'TOP 5 HAPPIEST CARDS',saddest:'TOP 5 SADDEST CARDS',stories:'TOP 5 STORY CARDS',facts:'TOP 5 CRAZY CARD FACTS'};return map[t]||`TOP 5 ${set} CARDS`}
+function fillManualScriptTemplate(){let c=getCards(),set=$('setName').value.trim()||'these cards';$('manualScript').value=`Here are my Top 5 picks for ${set}.\n\nAt number five, ${c[4]}. [Say exactly why you picked this card.]\n\nAt number four, ${c[3]}. [Say exactly why this one stands out.]\n\nAt number three, ${c[2]}. [Add your honest opinion here.]\n\nAt number two, ${c[1]}. [Explain why this almost made number one.]\n\nAnd at number one, ${c[0]}. [Explain why this is your favourite pick.]\n\nWhich card would you put at number one?`}
+function generateScript(){if(!$('manualScript').value.trim())fillManualScriptTemplate();latestScript=$('manualScript').value.trim();$('scriptOutput').textContent=latestScript}
+function generateCaptions(){let c=getCards();latestCaptions=`${getCaptionTheme()}\n\n#5 ${c[4]}\n\n#4 ${c[3]}\n\n#3 ${c[2]}\n\n#2 ${c[1]}\n\n#1 ${c[0]}\n\nDID I GET THIS RIGHT?`;$('captionsOutput').textContent=latestCaptions}
+function buildScenes(){let c=getCards(),im=getImages();return [{image:'',text:getCaptionTheme(),time:'0:00 - 0:03',duration:3000,type:'HOOK'},{image:im[4],text:'#5 '+c[4],time:'0:03 - 0:11',duration:8000,type:'CARD'},{image:im[3],text:'#4 '+c[3],time:'0:11 - 0:19',duration:8000,type:'CARD'},{image:im[2],text:'#3 '+c[2],time:'0:19 - 0:27',duration:8000,type:'CARD'},{image:im[1],text:'#2 '+c[1],time:'0:27 - 0:35',duration:8000,type:'CARD'},{image:im[0],text:'#1 '+c[0],time:'0:35 - 0:43',duration:8000,type:'CARD'},{image:'',text:'DID I GET THIS RIGHT?',time:'0:43 - 0:46',duration:3000,type:'CTA'}]}
+function generateStoryboard(){let scenes=buildScenes();latestStoryboard=scenes.map(s=>`${s.time} - ${s.type} - ${s.text}`).join('\n');$('storyboardOutput').textContent=latestStoryboard}
+function generateEverything(){generateScript();generateCaptions();generateStoryboard();$('projectStatus').textContent='Generated pack. Next: preview, export, or save project.'}
+function playVideoPreview(){clearPreviewTimers();let delay=0,img=$('videoImage'),txt=$('videoText'),timer=$('videoTimer');buildScenes().forEach(scene=>{let id=setTimeout(()=>{img.classList.remove('fadeIn');void img.offsetWidth;if(scene.image){img.src=scene.image;img.style.display='block';img.style.opacity='0';img.classList.add('fadeIn')}else{img.removeAttribute('src');img.style.display='none'}txt.textContent=scene.text;txt.style.display=scene.text?'block':'none';timer.textContent=scene.time},delay);previewTimeouts.push(id);delay+=scene.duration});previewTimeouts.push(setTimeout(()=>timer.textContent='Preview finished',delay))}
+function drawRoundedRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();ctx.fill()}
+function drawWrappedText(ctx,text,x,y,maxWidth,lineHeight){if(!text)return;let words=text.split(' '),line='',lines=[];for(let i=0;i<words.length;i++){let test=line+words[i]+' ';if(ctx.measureText(test).width>maxWidth&&i>0){lines.push(line.trim());line=words[i]+' '}else line=test}lines.push(line.trim());let boxHeight=lines.length*lineHeight+40;ctx.fillStyle='rgba(0,0,0,.58)';drawRoundedRect(ctx,60,y-40,maxWidth+40,boxHeight,22);ctx.fillStyle='white';ctx.textAlign='center';ctx.textBaseline='top';lines.forEach((l,i)=>ctx.fillText(l,x,y+i*lineHeight))}
+function loadImageForCanvas(src){return new Promise(resolve=>{if(!src)return resolve(null);let img=new Image();img.onload=()=>resolve(img);img.onerror=()=>resolve(null);img.src=src})}
+function safeVideoFileName(){return (($('setName').value.trim()||'pokeshorts-video').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'pokeshorts-video')+'.webm'}
+async function downloadWebMVideo(){let status=$('downloadStatus'),link=$('downloadLinkArea');status.textContent='Preparing video. Keep this page open...';link.innerHTML='';let canvas=document.createElement('canvas');canvas.width=1080;canvas.height=1920;let ctx=canvas.getContext('2d'),stream=canvas.captureStream(30),chunks=[],recorder;try{recorder=new MediaRecorder(stream,{mimeType:'video/webm;codecs=vp9'})}catch(e){try{recorder=new MediaRecorder(stream,{mimeType:'video/webm;codecs=vp8'})}catch(e2){recorder=new MediaRecorder(stream,{mimeType:'video/webm'})}}recorder.ondataavailable=e=>{if(e.data&&e.data.size>0)chunks.push(e.data)};recorder.onstop=()=>{let blob=new Blob(chunks,{type:'video/webm'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=safeVideoFileName();a.className='btn';a.textContent='Tap here to download WebM video';link.appendChild(a);status.textContent='Video ready.'};recorder.start();for(let scene of buildScenes()){let img=await loadImageForCanvas(scene.image),frames=Math.round(scene.duration/1000*30);for(let frame=0;frame<frames;frame++){let p=frame/frames;ctx.fillStyle='#000';ctx.fillRect(0,0,1080,1920);let g=ctx.createLinearGradient(0,0,0,1920);g.addColorStop(0,'#151515');g.addColorStop(1,'#000');ctx.fillStyle=g;ctx.fillRect(0,0,1080,1920);if(img){let scale=1+p*.18,ratio=Math.min((1080*.82)/img.width,(1920*.68)/img.height)*scale,w=img.width*ratio,h=img.height*ratio,fade=24,alpha=frame<fade?frame/fade:frame>frames-fade?(frames-frame)/fade:1;ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,alpha));ctx.drawImage(img,(1080-w)/2,(1920-h)/2-80,w,h);ctx.restore()}if(scene.text){ctx.font='bold 76px Arial';drawWrappedText(ctx,scene.text.toUpperCase(),540,1490,900,88)}ctx.font='32px Arial';ctx.fillStyle='rgba(255,255,255,.75)';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(scene.time,540,60);await new Promise(r=>setTimeout(r,1000/30))}}recorder.stop()}
+function copyText(text,msg){navigator.clipboard.writeText(text||'');alert(msg)}function copyScript(){if(!latestScript)generateScript();copyText(latestScript,'Script copied!')}function copyCaptions(){if(!latestCaptions)generateCaptions();copyText(latestCaptions,'Captions copied!')}function copyStoryboard(){if(!latestStoryboard)generateStoryboard();copyText(latestStoryboard,'Storyboard copied!')}
+function storage(key){try{return JSON.parse(localStorage.getItem(key)||'{}')}catch(e){return {}}}function setStorage(key,obj){localStorage.setItem(key,JSON.stringify(obj))}
+function getProjectData(){return {savedAt:new Date().toISOString(),videoType:$('videoType').value,setName:$('setName').value,cards:getCards(),manualScript:$('manualScript').value,views:$('views').value,likes:$('likes').value,postedUrl:$('postedUrl').value}}
+function applyProjectData(d){$('videoType').value=d.videoType||'future';$('setName').value=d.setName||'';(d.cards||[]).forEach((v,i)=>$('card'+(i+1)).value=v||'');$('manualScript').value=d.manualScript||'';$('views').value=d.views||'';$('likes').value=d.likes||'';$('postedUrl').value=d.postedUrl||''}
+function saveProject(){let name=$('projectName').value.trim()||$('setName').value.trim()||'Untitled Project',p=storage('pokeshortsEngineProjects');p[name]=getProjectData();setStorage('pokeshortsEngineProjects',p);refreshProjectList();$('savedProjectsSelect').value=name;$('projectStatus').textContent='Saved project: '+name}
+function loadProject(){let name=$('savedProjectsSelect').value,p=storage('pokeshortsEngineProjects');if(!name||!p[name])return $('projectStatus').textContent='Choose a saved project first.';applyProjectData(p[name]);$('projectName').value=name;generateEverything();$('projectStatus').textContent='Loaded project: '+name}
+function deleteProject(){let name=$('savedProjectsSelect').value,p=storage('pokeshortsEngineProjects');if(!name)return $('projectStatus').textContent='Choose a saved project to delete.';delete p[name];setStorage('pokeshortsEngineProjects',p);refreshProjectList();$('projectStatus').textContent='Deleted project: '+name}
+function refreshProjectList(){let p=storage('pokeshortsEngineProjects'),sel=$('savedProjectsSelect');sel.innerHTML='<option value="">Select a saved project</option>';Object.keys(p).sort().forEach(n=>{let o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o)})}
+function savePerformance(){saveProject();$('projectStatus').textContent+='\nPerformance saved: '+($('views').value||0)+' views, '+($('likes').value||0)+' likes.'}
+function saveIdea(){let title=$('ideaTitle').value.trim();if(!title)return;let ideas=storage('pokeshortsIdeas');ideas[Date.now()]={title,notes:$('ideaNotes').value.trim(),createdAt:new Date().toISOString(),videoType:$('videoType').value,setName:$('setName').value,cards:getCards()};setStorage('pokeshortsIdeas',ideas);$('ideaTitle').value='';$('ideaNotes').value='';renderIdeas()}
+function loadIdea(id){let i=storage('pokeshortsIdeas')[id];if(!i)return;$('videoType').value=i.videoType||'future';$('setName').value=i.setName||i.title;(i.cards||[]).forEach((v,idx)=>$('card'+(idx+1)).value=v==='Card '+(idx+1)?'':v);$('ideaTitle').value=i.title;$('ideaNotes').value=i.notes||'';fillManualScriptTemplate();generateEverything()}
+function deleteIdea(id){let ideas=storage('pokeshortsIdeas');delete ideas[id];setStorage('pokeshortsIdeas',ideas);renderIdeas()}
+function renderIdeas(){let ideas=storage('pokeshortsIdeas'),ids=Object.keys(ideas).sort((a,b)=>b-a),box=$('ideaQueue');if(!ids.length){box.textContent='No saved ideas yet.';return}box.innerHTML='';ids.forEach(id=>{let i=ideas[id],div=document.createElement('div');div.className='idea';div.innerHTML=`<div class="ideaTop"><div><div class="ideaTitle">${i.title}</div><div class="ideaMeta">${new Date(i.createdAt).toLocaleString()}</div></div></div><div class="small">${i.notes||'No notes'}</div><button onclick="loadIdea('${id}')">Load Idea</button><button class="danger" onclick="deleteIdea('${id}')">Delete</button>`;box.appendChild(div)})}
+function generateStarterIdeas(){let starters=['Top 5 cards I think collectors are sleeping on','5 Pokémon cards with surprisingly dark stories','Top 5 affordable cards that look expensive','5 cards I regret not buying earlier','The happiest Pokémon card artworks ever'];let ideas=storage('pokeshortsIdeas');starters.forEach(t=>ideas[Date.now()+Math.random()]={title:t,notes:'Starter idea. Add cards, images, and your personal angle.',createdAt:new Date().toISOString(),videoType:'underrated',setName:t,cards:['','','','','']});setStorage('pokeshortsIdeas',ideas);renderIdeas()}
+function clearWorkingProject(){['setName','card1','card2','card3','card4','card5','manualScript','projectName','views','likes','postedUrl'].forEach(id=>$(id).value='');for(let i=1;i<=5;i++)$('preview'+i).removeAttribute('src');latestScript=latestCaptions=latestStoryboard='';$('scriptOutput').textContent='No script generated yet.';$('captionsOutput').textContent='No captions generated yet.';$('storyboardOutput').textContent='No storyboard generated yet.';$('videoText').textContent='Your preview will appear here';$('videoTimer').textContent='Not playing';$('downloadStatus').textContent='No video exported yet.';$('downloadLinkArea').innerHTML='';clearPreviewTimers()}
+window.addEventListener('load',()=>{buildImageGrid();refreshProjectList();renderIdeas()});
 </script>
-
 </body>
 </html>
