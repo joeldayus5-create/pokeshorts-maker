@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>PokéShorts Engine v1</title>
+<title>PokéShorts Engine v2</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 :root{--bg:#0d0f14;--panel:#181b23;--panel2:#222735;--text:#fff;--muted:#aeb6c7;--accent:#ffcb05;--accent2:#2a75bb;--danger:#ff5d5d;--ok:#48d17a;}
@@ -23,7 +23,7 @@ button,.btn{width:100%;padding:12px;border:none;border-radius:10px;font-size:16p
 </style>
 </head>
 <body>
-<header><h1>PokéShorts Engine v1</h1><div class="sub">Idea queue → script → captions → storyboard → silent vertical WebM</div></header>
+<header><h1>PokéShorts Engine v2</h1><div class="sub">Idea queue → real AI script studio → captions → storyboard → silent vertical WebM</div></header>
 <div class="wrap">
 <section class="card">
 <h2>1. Content idea</h2>
@@ -39,17 +39,27 @@ button,.btn{width:100%;padding:12px;border:none;border-radius:10px;font-size:16p
 <div class="row2"><button onclick="saveIdea()">Save Idea</button><button class="secondary" onclick="generateStarterIdeas()">Add Starter Ideas</button></div>
 <div id="ideaQueue" class="box">No saved ideas yet.</div>
 </section>
+
 <section class="card full">
-<h2>3. Images</h2><div class="row5" id="imageGrid"></div>
+<h2>3. AI Script Studio</h2>
+<p class="small">This connects to your private Vercel backend. Your OpenAI API key stays on Vercel, not in this page. Use your access code to unlock generation.</p>
+<div class="row2"><div><label>Backend URL</label><input id="backendUrl" placeholder="https://your-vercel-project.vercel.app/api/generate-script"></div><div><label>Access code</label><input id="accessCode" type="password" placeholder="Private code from Vercel"></div></div>
+<div class="row2"><div><label>Voice style</label><select id="voiceStyle"><option value="natural">Natural collector voice</option><option value="excited">Excited TikTok voice</option><option value="calm">Calm expert voice</option><option value="funny">Funny but not cringe</option><option value="dramatic">Dramatic countdown</option></select></div><div><label>Length</label><select id="scriptLength"><option value="35">35 seconds</option><option value="45" selected>45 seconds</option><option value="60">60 seconds</option></select></div></div>
+<label>Extra direction for the AI</label><textarea id="aiNotes" placeholder="Example: Make it sound like me, not too salesy. Mention that the number 1 card is my favourite because the artwork feels nostalgic."></textarea>
+<div class="row2"><button class="blue" onclick="generateWithAI()">Generate With Real AI</button><button class="secondary" onclick="saveAISettings()">Save AI Settings</button></div>
+<div id="aiStatus" class="box">AI is not connected yet. Add your backend URL and access code after Vercel is set up.</div>
+</section>
+<section class="card full">
+<h2>4. Images</h2><div class="row5" id="imageGrid"></div>
 </section>
 <section class="card">
-<h2>4. Outputs</h2><button onclick="copyScript()">Copy Script</button><div id="scriptOutput" class="box">No script generated yet.</div><button onclick="copyCaptions()">Copy Captions</button><div id="captionsOutput" class="box">No captions generated yet.</div><button onclick="copyStoryboard()">Copy Storyboard</button><div id="storyboardOutput" class="box">No storyboard generated yet.</div>
+<h2>5. Outputs</h2><button onclick="copyScript()">Copy Script</button><div id="scriptOutput" class="box">No script generated yet.</div><button onclick="copyCaptions()">Copy Captions</button><div id="captionsOutput" class="box">No captions generated yet.</div><button onclick="copyStoryboard()">Copy Storyboard</button><div id="storyboardOutput" class="box">No storyboard generated yet.</div>
 </section>
 <section class="card">
-<h2>5. Preview & export</h2><button onclick="playVideoPreview()">Play Preview</button><button class="ok" onclick="downloadWebMVideo()">Export WebM</button><div id="downloadStatus" class="box">No video exported yet.</div><div id="downloadLinkArea"></div><div id="videoFrame"><img id="videoImage"><div id="videoText">Your preview will appear here</div></div><div id="videoTimer">Not playing</div>
+<h2>6. Preview & export</h2><button onclick="playVideoPreview()">Play Preview</button><button class="ok" onclick="downloadWebMVideo()">Export WebM</button><div id="downloadStatus" class="box">No video exported yet.</div><div id="downloadLinkArea"></div><div id="videoFrame"><img id="videoImage"><div id="videoText">Your preview will appear here</div></div><div id="videoTimer">Not playing</div>
 </section>
 <section class="card full">
-<h2>6. Projects & performance tracker</h2><div class="row2"><input id="projectName" placeholder="Project name"><select id="savedProjectsSelect"></select></div><div class="row2"><button onclick="saveProject()">Save Project</button><button class="secondary" onclick="loadProject()">Load Project</button></div><div class="row2"><button class="danger" onclick="deleteProject()">Delete Project</button><button class="ghost" onclick="refreshProjectList()">Refresh</button></div><div class="row2"><input id="views" inputmode="numeric" placeholder="Views"><input id="likes" inputmode="numeric" placeholder="Likes"></div><input id="postedUrl" placeholder="Posted video URL"><button class="blue" onclick="savePerformance()">Save Performance To Project</button><div id="projectStatus" class="box">No project action yet.</div></section>
+<h2>7. Projects & performance tracker</h2><div class="row2"><input id="projectName" placeholder="Project name"><select id="savedProjectsSelect"></select></div><div class="row2"><button onclick="saveProject()">Save Project</button><button class="secondary" onclick="loadProject()">Load Project</button></div><div class="row2"><button class="danger" onclick="deleteProject()">Delete Project</button><button class="ghost" onclick="refreshProjectList()">Refresh</button></div><div class="row2"><input id="views" inputmode="numeric" placeholder="Views"><input id="likes" inputmode="numeric" placeholder="Likes"></div><input id="postedUrl" placeholder="Posted video URL"><button class="blue" onclick="savePerformance()">Save Performance To Project</button><div id="projectStatus" class="box">No project action yet.</div></section>
 </div>
 <script>
 let latestScript="",latestCaptions="",latestStoryboard="",previewTimeouts=[];
@@ -66,6 +76,41 @@ function generateScript(){if(!$('manualScript').value.trim())fillManualScriptTem
 function generateCaptions(){let c=getCards();latestCaptions=`${getCaptionTheme()}\n\n#5 ${c[4]}\n\n#4 ${c[3]}\n\n#3 ${c[2]}\n\n#2 ${c[1]}\n\n#1 ${c[0]}\n\nDID I GET THIS RIGHT?`;$('captionsOutput').textContent=latestCaptions}
 function buildScenes(){let c=getCards(),im=getImages();return [{image:'',text:getCaptionTheme(),time:'0:00 - 0:03',duration:3000,type:'HOOK'},{image:im[4],text:'#5 '+c[4],time:'0:03 - 0:11',duration:8000,type:'CARD'},{image:im[3],text:'#4 '+c[3],time:'0:11 - 0:19',duration:8000,type:'CARD'},{image:im[2],text:'#3 '+c[2],time:'0:19 - 0:27',duration:8000,type:'CARD'},{image:im[1],text:'#2 '+c[1],time:'0:27 - 0:35',duration:8000,type:'CARD'},{image:im[0],text:'#1 '+c[0],time:'0:35 - 0:43',duration:8000,type:'CARD'},{image:'',text:'DID I GET THIS RIGHT?',time:'0:43 - 0:46',duration:3000,type:'CTA'}]}
 function generateStoryboard(){let scenes=buildScenes();latestStoryboard=scenes.map(s=>`${s.time} - ${s.type} - ${s.text}`).join('\n');$('storyboardOutput').textContent=latestStoryboard}
+
+function saveAISettings(){localStorage.setItem('pokeshortsBackendUrl',$('backendUrl').value.trim());localStorage.setItem('pokeshortsAccessCode',$('accessCode').value);$('aiStatus').textContent='AI settings saved on this device.'}
+function loadAISettings(){let u=localStorage.getItem('pokeshortsBackendUrl')||'',c=localStorage.getItem('pokeshortsAccessCode')||'';if($('backendUrl'))$('backendUrl').value=u;if($('accessCode'))$('accessCode').value=c}
+function extractJsonBlock(text){try{return JSON.parse(text)}catch(e){}let match=text.match(/\{[\s\S]*\}/);if(match){try{return JSON.parse(match[0])}catch(e){}}return null}
+async function generateWithAI(){
+    let backend=$('backendUrl').value.trim();
+    let code=$('accessCode').value;
+    if(!backend)return $('aiStatus').textContent='Add your backend URL first.';
+    if(!code)return $('aiStatus').textContent='Add your private access code first.';
+    saveAISettings();
+    $('aiStatus').textContent='Generating a natural script...';
+    let payload={
+        videoType:$('videoType').value,
+        setName:$('setName').value.trim(),
+        cards:getCards(),
+        captionTheme:getCaptionTheme(),
+        voiceStyle:$('voiceStyle').value,
+        scriptLength:$('scriptLength').value,
+        notes:$('aiNotes').value.trim(),
+        existingManualScript:$('manualScript').value.trim()
+    };
+    try{
+        let res=await fetch(backend,{method:'POST',headers:{'Content-Type':'application/json','x-pokeshorts-code':code},body:JSON.stringify(payload)});
+        let data=await res.json().catch(()=>({error:'Invalid server response'}));
+        if(!res.ok)throw new Error(data.error||'AI request failed');
+        let pack=data.pack||extractJsonBlock(data.text||'')||{};
+        if(pack.script)$('manualScript').value=pack.script;
+        if(pack.captions){latestCaptions=Array.isArray(pack.captions)?pack.captions.join('\n\n'):String(pack.captions);$('captionsOutput').textContent=latestCaptions}else generateCaptions();
+        if(pack.storyboard){latestStoryboard=Array.isArray(pack.storyboard)?pack.storyboard.join('\n'):String(pack.storyboard);$('storyboardOutput').textContent=latestStoryboard}else generateStoryboard();
+        latestScript=$('manualScript').value.trim();$('scriptOutput').textContent=latestScript;
+        let extras=[];if(pack.title)extras.push('Title: '+pack.title);if(pack.description)extras.push('Description: '+pack.description);if(pack.hashtags)extras.push('Hashtags: '+(Array.isArray(pack.hashtags)?pack.hashtags.join(' '):pack.hashtags));
+        $('aiStatus').textContent='AI pack generated.\n\n'+extras.join('\n');
+    }catch(err){$('aiStatus').textContent='AI generation failed: '+err.message}
+}
+
 function generateEverything(){generateScript();generateCaptions();generateStoryboard();$('projectStatus').textContent='Generated pack. Next: preview, export, or save project.'}
 function playVideoPreview(){clearPreviewTimers();let delay=0,img=$('videoImage'),txt=$('videoText'),timer=$('videoTimer');buildScenes().forEach(scene=>{let id=setTimeout(()=>{img.classList.remove('fadeIn');void img.offsetWidth;if(scene.image){img.src=scene.image;img.style.display='block';img.style.opacity='0';img.classList.add('fadeIn')}else{img.removeAttribute('src');img.style.display='none'}txt.textContent=scene.text;txt.style.display=scene.text?'block':'none';timer.textContent=scene.time},delay);previewTimeouts.push(id);delay+=scene.duration});previewTimeouts.push(setTimeout(()=>timer.textContent='Preview finished',delay))}
 function drawRoundedRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();ctx.fill()}
@@ -88,7 +133,7 @@ function deleteIdea(id){let ideas=storage('pokeshortsIdeas');delete ideas[id];se
 function renderIdeas(){let ideas=storage('pokeshortsIdeas'),ids=Object.keys(ideas).sort((a,b)=>b-a),box=$('ideaQueue');if(!ids.length){box.textContent='No saved ideas yet.';return}box.innerHTML='';ids.forEach(id=>{let i=ideas[id],div=document.createElement('div');div.className='idea';div.innerHTML=`<div class="ideaTop"><div><div class="ideaTitle">${i.title}</div><div class="ideaMeta">${new Date(i.createdAt).toLocaleString()}</div></div></div><div class="small">${i.notes||'No notes'}</div><button onclick="loadIdea('${id}')">Load Idea</button><button class="danger" onclick="deleteIdea('${id}')">Delete</button>`;box.appendChild(div)})}
 function generateStarterIdeas(){let starters=['Top 5 cards I think collectors are sleeping on','5 Pokémon cards with surprisingly dark stories','Top 5 affordable cards that look expensive','5 cards I regret not buying earlier','The happiest Pokémon card artworks ever'];let ideas=storage('pokeshortsIdeas');starters.forEach(t=>ideas[Date.now()+Math.random()]={title:t,notes:'Starter idea. Add cards, images, and your personal angle.',createdAt:new Date().toISOString(),videoType:'underrated',setName:t,cards:['','','','','']});setStorage('pokeshortsIdeas',ideas);renderIdeas()}
 function clearWorkingProject(){['setName','card1','card2','card3','card4','card5','manualScript','projectName','views','likes','postedUrl'].forEach(id=>$(id).value='');for(let i=1;i<=5;i++)$('preview'+i).removeAttribute('src');latestScript=latestCaptions=latestStoryboard='';$('scriptOutput').textContent='No script generated yet.';$('captionsOutput').textContent='No captions generated yet.';$('storyboardOutput').textContent='No storyboard generated yet.';$('videoText').textContent='Your preview will appear here';$('videoTimer').textContent='Not playing';$('downloadStatus').textContent='No video exported yet.';$('downloadLinkArea').innerHTML='';clearPreviewTimers()}
-window.addEventListener('load',()=>{buildImageGrid();refreshProjectList();renderIdeas()});
+window.addEventListener('load',()=>{buildImageGrid();refreshProjectList();renderIdeas();loadAISettings()});
 </script>
 </body>
 </html>
